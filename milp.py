@@ -35,7 +35,7 @@ def milp_solve(requests, rooms, parameters):
     shotgun_parameter = parameters["shotgun_parameter"]
 
     # Import data and make notations match the overleaf
-    r = [request.room_type for request in requests]
+    r = [room.room_type for room in rooms]
     p = [[int(request.prefered_room_type == k) for k in range(nb_room_types)] for request in requests]
     g = [request.gender for request in requests]
     b = [[int(request.has_mate and request.mate_id == i_2) for i_2 in range(request.student_id+1, nb_requests)] for request in requests]
