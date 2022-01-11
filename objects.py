@@ -19,13 +19,13 @@ class Room:
     def __init__(self, room_id, room_type):
         self.id = room_id
         self.room_type = room_type
-        if room_type == 1:  # chambre simple
+        if room_type == 0:  # chambre simple
             self.capacity = 1
             self.students = []
-        elif room_type == 2:  # chambre binomée
+        elif room_type == 1:  # chambre binomée
             self.capacity = 2
             self.students = []
-        elif room_type == 3:  # chambre double
+        elif room_type == 2:  # chambre double
             self.capacity = 2
             self.students = []
         else:
