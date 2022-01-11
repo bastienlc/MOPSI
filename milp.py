@@ -1,14 +1,16 @@
 import gurobipy as gp
 import numpy as np
+import csv
 
 
 def milp_solve(requests, rooms, parameters):
     """
     Solves the MILP version of the allocation problem.
     :param requests: list of the requests of the student, in the shape:
-    (preference, genre, buddy_request, grant, distance, foreign, shotgun_rank)
+    (preference, rigid_preference, gender, buddy_request, grant, distance, foreign, shotgun_rank)
         preference: -1 if no preference, k if preference for type k (k=0, 1 and 2; see 'rooms' for room type encoding).
-        genre: -1 if man, 0 if not given, 1 if woman.
+        rigid_preference: 1 if the student accepts to receive a room of different type from prefered, else 0.
+        gender: -1 if man, 0 if not given, 1 if woman.
         buddy_request: -1 if no buddy requested, else index (starting from 0) of the budddy in the list.
         grant: 1 if the student receives a grant, else 0.
         distance: distance from Ponts ParisTech in km.
@@ -54,8 +56,8 @@ def milp_solve(requests, rooms, parameters):
 
     # Set objective
     coeff_on_x = {
-        (i, j): 1 + room_preference_bonus_parameter*p[i][r[j]] - room_preference_malus_parameter*(1-p[i][r[j]])
-                + grant_parameter*a[i] + distance_parameter*d[i] + foreign_parameter*f[i] - shotgun_parameter*s[i]
+        (i, j): (1 + room_preference_bonus_parameter*p[i][r[j]] - room_preference_malus_parameter*(1-p[i][r[j]])*q[i]
+                 + grant_parameter*a[i] + distance_parameter*d[i] + foreign_parameter*f[i] - shotgun_parameter*s[i])
         for i in requests_range
         for j in rooms_range
     }
@@ -113,7 +115,7 @@ def milp_solve(requests, rooms, parameters):
 if __name__ == "__main__":
     # parameters
     room_preference_bonus_parameter = 0.1
-    room_preference_malus_parameter = 0.1
+    room_preference_malus_parameter = 100
     gender_mix_parameter = 0.2
     buddy_preference_parameter = 0.2
 
@@ -132,24 +134,5 @@ if __name__ == "__main__":
         "foreign_parameter": foreign_parameter,
         "shotgun_parameter": shotgun_parameter
     }
-
-    # data
-    requests = [
-        # (preference, genre, buddy_request, grant, distance, foreign, shotgun_rank)
-        (0, -1, -1, 0, 30, 0, 0),
-        (0, 1, -1, 1, 45, 0, 1),
-        (-1, 1, -1, 0, 40, 0, 2),
-        (2, -1, 5, 0, 80, 0, 3),
-        (0, 0, -1, 0, 50, 0, 4),
-        (2, 1, 3, 0, 85, 0, 5),
-        (1, 1, -1, 1, 50, 0, 6),
-        (0, 1, -1, 0, 1000, 1, 7),
-        (0, -1, -1, 1, 42, 0, 8),
-        (2, -1, -1, 0, 20, 0, 9),
-        (0, 1, -1, 1, 150, 0, 10),
-        (0, -1, -1, 0, 10, 0, 11)
-    ]
-
-    rooms = [0, 0, 1, 1, 2, 2]
 
     milp_solve(requests, rooms, parameters)
