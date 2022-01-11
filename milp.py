@@ -35,14 +35,14 @@ def milp_solve(requests, rooms, parameters):
     shotgun_parameter = parameters["shotgun_parameter"]
 
     # Import data and make notations match the overleaf
-    r = rooms
-    p = [[int(requests[i][0] == k) for k in range(nb_room_types)] for i in requests_range]
-    g = [requests[i][1] for i in requests_range]
-    b = [[int(requests[i_1][2] == i_2) for i_2 in range(i_1+1, nb_requests)] for i_1 in requests_range]
-    a = [requests[i][3] for i in requests_range]
-    d = [int(requests[i][4] > 50) for i in requests_range]
-    f = [requests[i][5] for i in requests_range]
-    s = [requests[i][6] for i in requests_range]
+    r = [request.room_type for request in requests]
+    p = [[int(request.prefered_room_type == k) for k in range(nb_room_types)] for request in requests]
+    g = [request.gender for request in requests]
+    b = [[int(request.has_mate and request.mate_id == i_2) for i_2 in range(request.student_id+1, nb_requests)] for request in requests]
+    a = [request.scholarship for request in requests]
+    d = [int(request.distance > 50) for request in requests]
+    f = [request.distance > 800 for request in requests]
+    s = [request.shotgun_rank for request in requests]
 
     # Model
     m = gp.Model("admissibles_MILP")
