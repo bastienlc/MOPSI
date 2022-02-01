@@ -72,7 +72,7 @@ def json_to_objects_rooms(rooms_file):
 
 
 if __name__ == "__main__":
-    requests_filename = "..\db\eleves_demande.json"
-    rooms_filename = "..\db\chambre.json"
+    requests_filename = "db\eleves_demande.json"
+    rooms_filename = "db\chambre.json"
     print(json_to_objects_requests(requests_filename)[18])
     print(json_to_objects_rooms(rooms_filename)[0])

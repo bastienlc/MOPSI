@@ -1,6 +1,6 @@
 import gurobipy as gp
 import numpy as np
-from data_conversion import *
+from data_conversion import json_to_objects_rooms, json_to_objects_requests
 
 
 def milp_solve(requests, rooms, parameters):
@@ -39,8 +39,9 @@ def milp_solve(requests, rooms, parameters):
     # Import data and make notations match the overleaf
     r = [room.room_type for room in rooms]
     p = [[int(request.prefered_room_type == k) for k in range(nb_room_types)] for request in requests]
+    q = [int(not request.accept_other_type) for request in requests]
     g = [request.gender for request in requests]
-    b = [[int(request.has_mate and request.mate_id == i_2) for i_2 in range(request.student_id+1, nb_requests)] for request in requests]
+    b = [[int(request.has_mate and request.mate_id == request2.student_id) for request2 in requests] for request in requests]
     a = [request.scholarship for request in requests]
     d = [int(request.distance > 50) for request in requests]
     f = [request.distance > 800 for request in requests]
@@ -135,9 +136,7 @@ if __name__ == "__main__":
         "shotgun_parameter": shotgun_parameter
     }
 
-    requests_filename = "..\db\eleves_demande.json"
-    rooms_filename = "..\db\chambre.json"
-    requests = json_to_objects_requests(requests_filename)
-    rooms = json_to_objects_rooms(rooms_filename)
+    requests = json_to_objects_requests("db\eleves_demande.json")
+    rooms = json_to_objects_rooms("db\chambre.json")
 
-    milp_solve(requests, rooms, parameters)
+    milp_solve(requests[:50], rooms, parameters)
