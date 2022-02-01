@@ -29,12 +29,12 @@ def json_to_objects_requests(requests_file):
     for (request_i, request) in enumerate(requests_raw):
         student_id = int(request["id_demande"])
         gender = gender_convention_conversion[int(request["gender"])-1]
-        scholarship = int(request["boursier"])
+        scholarship = bool(int(request["boursier"]))
         distance = int(request["distance"])
         prefered_room_type = int(request["type_chambre"]) - 1
-        accept_other_type = bool(request["remplace"])
+        accept_other_type = bool(int(request["remplace"]))
         shotgun_rank = shotgun_ranks[request_i]
-        has_mate = bool(request["mate"])
+        has_mate = bool(int(request["mate"]))
         mate_id = None
         if has_mate:
             mate_email = request["mate_email"]
@@ -42,7 +42,7 @@ def json_to_objects_requests(requests_file):
             for other_resquest in requests_raw:
                 if other_resquest["mail"] == mate_email:
                     consistent_mate_request = (
-                            bool(other_resquest["mate"])
+                            bool(int(other_resquest["mate"]))
                             and other_resquest["mate_email"] == request["mail"]
                     )
                     mate_id = int(other_resquest["id_demande"])
@@ -71,7 +71,8 @@ def json_to_objects_rooms(rooms_file):
     return rooms_list
 
 
-requests_filename = "D:\Etudes\Ponts et chaussees\MOPSI\db\eleves_demande.json"
-rooms_filename = "D:\Etudes\Ponts et chaussees\MOPSI\db\chambre.json"
-print(json_to_objects_requests(requests_filename))
-print(json_to_objects_rooms(rooms_filename))
+if __name__ == "__main__":
+    requests_filename = "..\db\eleves_demande.json"
+    rooms_filename = "..\db\chambre.json"
+    print(json_to_objects_requests(requests_filename)[18])
+    print(json_to_objects_rooms(rooms_filename)[0])

@@ -1,6 +1,6 @@
 import gurobipy as gp
 import numpy as np
-import csv
+from data_conversion import *
 
 
 def milp_solve(requests, rooms, parameters):
@@ -134,5 +134,10 @@ if __name__ == "__main__":
         "foreign_parameter": foreign_parameter,
         "shotgun_parameter": shotgun_parameter
     }
+
+    requests_filename = "..\db\eleves_demande.json"
+    rooms_filename = "..\db\chambre.json"
+    requests = json_to_objects_requests(requests_filename)
+    rooms = json_to_objects_rooms(rooms_filename)
 
     milp_solve(requests, rooms, parameters)
