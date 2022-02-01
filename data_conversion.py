@@ -70,8 +70,10 @@ def json_to_objects_rooms(rooms_file):
     rooms_list = [Room(int(room["numero"]), int(room["type"])-1) for room in rooms_raw]
     return rooms_list
 
-
-requests_filename = "D:\Etudes\Ponts et chaussees\MOPSI\db\eleves_demande.json"
-rooms_filename = "D:\Etudes\Ponts et chaussees\MOPSI\db\chambre.json"
-print(json_to_objects_requests(requests_filename))
-print(json_to_objects_rooms(rooms_filename))
+if __name__ == "__main__":
+    #requests_filename = "D:\Etudes\Ponts et chaussees\MOPSI\db\eleves_demande.json"
+    #rooms_filename = "D:\Etudes\Ponts et chaussees\MOPSI\db\chambre.json"
+    requests_filename = "eleves_demande.json"
+    rooms_filename = "chambre.json"
+    print(json_to_objects_requests(requests_filename)[0])
+    print(json_to_objects_rooms(rooms_filename)[0])

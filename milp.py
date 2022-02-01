@@ -1,6 +1,7 @@
 import gurobipy as gp
 import numpy as np
 import csv
+from data_conversion import json_to_objects_rooms, json_to_objects_requests
 
 
 def milp_solve(requests, rooms, parameters):
@@ -40,11 +41,12 @@ def milp_solve(requests, rooms, parameters):
     r = [room.room_type for room in rooms]
     p = [[int(request.prefered_room_type == k) for k in range(nb_room_types)] for request in requests]
     g = [request.gender for request in requests]
-    b = [[int(request.has_mate and request.mate_id == i_2) for i_2 in range(request.student_id+1, nb_requests)] for request in requests]
+    b = [[int(request.has_mate and request.mate_id == request2.student_id) for request2 in requests] for request in requests]
     a = [request.scholarship for request in requests]
     d = [int(request.distance > 50) for request in requests]
     f = [request.distance > 800 for request in requests]
     s = [request.shotgun_rank for request in requests]
+    q = [int(not request.accept_other_type) for request in requests]
 
     # Model
     m = gp.Model("admissibles_MILP")
@@ -134,5 +136,8 @@ if __name__ == "__main__":
         "foreign_parameter": foreign_parameter,
         "shotgun_parameter": shotgun_parameter
     }
+
+    requests = json_to_objects_requests("eleves_demande.json")
+    rooms = json_to_objects_rooms("chambre.json")
 
     milp_solve(requests, rooms, parameters)
