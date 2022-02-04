@@ -1,6 +1,7 @@
 import gurobipy as gp
 import numpy as np
-from data_conversion import json_to_objects_rooms, json_to_objects_requests
+from data_conversion import *
+from objects import Attribution
 from termcolor import colored
 
 
@@ -67,7 +68,7 @@ def print_pairings(requests_range, rooms_range, m, g):
                 print("   ", end="")
 
 
-def milp_solve(requests, rooms, parameters):
+def milp_solve(requests, rooms, parameters, verbose=True):
     """
     Solves the MILP version of the allocation problem.
     :param requests: list of the requests of the student, in the shape:
@@ -160,16 +161,44 @@ def milp_solve(requests, rooms, parameters):
     m.update()
     m.optimize()
 
-    print("solution :")
+    # Fill attributions corresponding to the solution
+    attributions = []
+    filled_attributions = [False]*nb_requests
     for i in requests_range:
-        for j in rooms_range:
+        if not filled_attributions[i]:
+            for j in rooms_range:
+                x_i_j = m.getVarByName(f"x[{i},{j}]")
+                if x_i_j.x == 1:
+                    attribution = Attribution(requests[i], rooms[j])
+                    for i_mate in range(i+1, nb_requests):
+                        z_i_imate_j = m.getVarByName(f"z[{i},{i_mate},{j}]")
+                        if z_i_imate_j.x == 1:
+                            attribution.set_mate(requests[i_mate].student_id)
+                            mate_attribution = Attribution(
+                                requests[i_mate], rooms[j], requests[i].student_id
+                            )
+                            attributions.append(mate_attribution)
+                            filled_attributions[i_mate] = True
+                            break
+                    attributions.append(attribution)
+                    filled_attributions[i] = True
+
+    # Fill the rooms accordingly
+    for j in rooms_range:
+        for i in requests_range:
             x_i_j = m.getVarByName(f"x[{i},{j}]")
             if x_i_j.x == 1:
-                print(f"Request {i} satisfied with chamber {j}.")
+                rooms[j].students.append(requests[i].student_id)
 
-    print_pairings(requests_range, rooms_range, m, g)
+    if verbose:
+        attributions.sort(key=lambda attribution: attribution.request.student_id)
+        print("solution :")
+        for attribution in attributions:
+            print(attribution)
 
-    return
+    # print_pairings(requests_range, rooms_range, m, g)
+
+    return attributions
 
 
 if __name__ == "__main__":
@@ -202,4 +231,7 @@ if __name__ == "__main__":
     rooms = json_to_objects_rooms("db\chambre_small.json")
     print("Rooms loaded.")
     print("Launching MILP solver :")
-    milp_solve(requests, rooms, parameters)
+    attributions = milp_solve(requests, rooms, parameters)
+    print("Writing solution files...")
+    write_solutions(attributions, requests, rooms, "test")
+    print("Done.")

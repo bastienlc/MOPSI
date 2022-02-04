@@ -1,4 +1,6 @@
 import json
+import numpy as np
+import csv
 from objects import Request, Room
 
 
@@ -28,7 +30,7 @@ def json_to_objects_requests(requests_file):
 
     for (request_i, request) in enumerate(requests_raw):
         student_id = int(request["id_demande"])
-        gender = gender_convention_conversion[int(request["gender"])-1]
+        gender = gender_convention_conversion[int(request["gender"]) - 1]
         scholarship = bool(int(request["boursier"]))
         distance = int(request["distance"])
         prefered_room_type = int(request["type_chambre"]) - 1
@@ -67,12 +69,87 @@ def json_to_objects_rooms(rooms_file):
     """
     with open(rooms_file) as file:
         rooms_raw = json.load(file)[2]["data"]
-    rooms_list = [Room(int(room["numero"]), int(room["type"])-1) for room in rooms_raw]
+    rooms_list = [Room(int(room["numero"]), int(room["type"]) - 1) for room in rooms_raw]
     return rooms_list
+
+
+def write_attribution_matrix(attributions, requests, instance_name):
+    nb_requests = len(requests)
+    requests.sort(key=lambda request: request.student_id)
+    id_to_idx = {requests[k].student_id: k for k in range(nb_requests)}
+    attribution_matrix = np.array([[None for _ in range(nb_requests)] for _ in range(nb_requests)])
+    for attribution in attributions:
+        request_idx = id_to_idx[attribution.request.student_id]
+        room_id = attribution.room.room_id
+        mate_id = attribution.mate
+        if mate_id:
+            mate_idx = id_to_idx[mate_id]
+            attribution_matrix[request_idx][mate_idx] = room_id
+        else:
+            attribution_matrix[request_idx][request_idx] = room_id
+    with open(f'solutions/sol_{instance_name}_matrix.csv', 'w', newline='') as csvfile:
+        solution_writer = csv.writer(csvfile, delimiter=';')
+        solution_writer.writerow(["La cellule (i,j) indique la chambre logeant le(s) eleve(s) d'id i et j."])
+        solution_writer.writerow(["id eleve"] + [request.student_id for request in requests])
+        for row_idx in range(nb_requests):
+            row = [requests[row_idx].student_id]
+            for column_idx in range(nb_requests):
+                cell = attribution_matrix[row_idx][column_idx]
+                if cell:
+                    row += [cell]
+                else:
+                    row += [""]
+            solution_writer.writerow(row)
+
+
+def write_attributions_requests_wise(attributions, instance_name):
+    attributions.sort(key=lambda attribution: attribution.request.student_id)
+    with open(f'solutions/sol_{instance_name}_request-wise.csv', 'w', newline='') as csvfile:
+        solution_writer = csv.writer(csvfile, delimiter=';')
+        solution_writer.writerow(
+            ["id eleve", "genre", "boursier", "distance", "preference de chambre", "preference souple", "shotgun",
+             "colocataire souhaite", "", "id chambre", "type chambre", "", "colocataire"])
+        for attribution in attributions:
+            request = attribution.request
+            room = attribution.room
+            row = [
+                request.student_id,
+                request.gender,
+                request.scholarship,
+                request.distance,
+                request.prefered_room_type,
+                request.accept_other_type,
+                request.shotgun_rank,
+            ]
+            if request.has_mate:
+                row.append(request.mate_id)
+            else:
+                row.append("")
+            row.append("")
+            row += [room.room_id, room.what_room_type()]
+            row.append("")
+            mate = attribution.mate
+            if mate:
+                row += [mate]
+            solution_writer.writerow(row)
+
+
+def write_attributions_rooms_wise(rooms, instance_name):
+    rooms.sort(key=lambda room: room.room_id)
+    with open(f'solutions/sol_{instance_name}_rooms-wise.csv', 'w', newline='') as csvfile:
+        solution_writer = csv.writer(csvfile, delimiter=';')
+        solution_writer.writerow(["id chambre", "type chambre", "id eleve 1", "id eleve 2"])
+        for room in rooms:
+            row = [room.room_id, room.what_room_type()] + room.students
+            solution_writer.writerow(row)
+
+
+def write_solutions(attributions, requests, rooms, instance_name):
+    write_attribution_matrix(attributions, requests, instance_name)
+    write_attributions_requests_wise(attributions, instance_name)
+    write_attributions_rooms_wise(rooms, instance_name)
 
 
 if __name__ == "__main__":
     requests_filename = "db\eleves_demande.json"
     rooms_filename = "db\chambre.json"
-    print(json_to_objects_requests(requests_filename)[18])
-    print(json_to_objects_rooms(rooms_filename)[0])
