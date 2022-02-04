@@ -2,7 +2,69 @@ import gurobipy as gp
 import numpy as np
 import csv
 from data_conversion import json_to_objects_rooms, json_to_objects_requests
+from termcolor import colored
 
+
+def get_z_mat(requests_range, rooms_range, m):
+    z = [
+            [
+                [0 for k in rooms_range]
+            for j in requests_range]
+        for i in requests_range]
+
+    has_roommate = [False for i in requests_range]
+
+    for i in requests_range:
+        for j in requests_range:
+            if j > i:
+                for k in rooms_range:
+                    z_i_j_k = m.getVarByName(f"z[{i},{j},{k}]")
+                    if z_i_j_k.x == 1:
+                        z[i][j][k] = 1
+                        z[j][i][k] = 1
+                        has_roommate[i] = True
+                        has_roommate[j] = True
+                        break
+        if not has_roommate[i]:
+            for k in rooms_range:
+                x_i_k = m.getVarByName(f"x[{i},{k}]")
+                if x_i_k.x == 1:
+                    z[i][i][k] = 1
+                    break
+    return z
+
+def print_pairings(requests_range, rooms_range, m, g):
+    z = get_z_mat(requests_range, rooms_range, m)
+    print("   ", end="")
+    for i in requests_range:
+        print(" ", end="")
+        if g[i] == -1:
+            print(colored(i, "red"), end="")
+        elif g[i] == 0:
+            print(colored(i, "blue"), end="")
+        else:
+            print(colored(i, "green"), end="")
+        print(" ", end="")
+    print("\n", end="")
+    for i in requests_range:
+        print("\n", end="")
+        print(" ", end="")
+        if g[i] == -1:
+            print(colored(i, "red"), end="")
+        elif g[i] == 0:
+            print(colored(i, "blue"), end="")
+        else:
+            print(colored(i, "green"), end="")
+        print(" ", end="")
+        for j in requests_range:
+            found = False
+            for k in rooms_range:
+                if z[i][j][k] == 1:
+                    print(" X ", end="")
+                    found = True
+                    break
+            if not found:
+                print("   ", end="")
 
 def milp_solve(requests, rooms, parameters):
     """
@@ -104,12 +166,10 @@ def milp_solve(requests, rooms, parameters):
             if x_i_j.x == 1:
                 print(f"Request {i} satisfied with chamber {j}.")
 
-    # for i_1 in requests_range:
-    #     for i_2 in range(i_1+1, nb_requests):
-    #         for j in rooms_range:
-    #             z_i_j = m.getVarByName(f"z[{i_1},{i_2},{j}]")
-    #             if z_i_j.x == 1:
-    #                 print(z_i_j.varName, z_i_j.x)
+    print_pairings(requests_range, rooms_range, m, g)
+
+
+
 
     return
 
@@ -137,7 +197,11 @@ if __name__ == "__main__":
         "shotgun_parameter": shotgun_parameter
     }
 
-    requests = json_to_objects_requests("eleves_demande.json")
-    rooms = json_to_objects_rooms("chambre.json")
-
+    print("Loading students requests...")
+    requests = json_to_objects_requests("eleves_demande_small.json")
+    print("Students requests loaded.")
+    print("Loading rooms...")
+    rooms = json_to_objects_rooms("chambre_small.json")
+    print("Rooms loaded.")
+    print("Launching MILP solver :")
     milp_solve(requests, rooms, parameters)
