@@ -130,8 +130,8 @@ def milp_solve(requests, rooms, parameters, verbose=True):
     sum_on_x = x.prod(coeff_on_x)
 
     coeff_on_z = {
-        (i_1, i_2, j): - gender_mix_parameter*abs(g[i_1]*g[i_2]*(g[i_1] - g[i_2]))*(1 - b[i_1][i_2-(i_1+1)])
-                       + buddy_preference_parameter*b[i_1][i_2-(i_1+1)]
+        (i_1, i_2, j): - gender_mix_parameter*abs(g[i_1]*g[i_2]*(g[i_1] - g[i_2]))*(1 - b[i_1][i_2])
+                       + buddy_preference_parameter*b[i_1][i_2]
         for i_1 in requests_range
         for i_2 in range(i_1 + 1, nb_requests)
         for j in rooms_range
@@ -225,10 +225,10 @@ if __name__ == "__main__":
     }
 
     print("Loading students requests...")
-    requests = json_to_objects_requests("db\eleves_demande_small.json")
+    requests = json_to_objects_requests("db/test-requests.json")
     print("Students requests loaded.")
     print("Loading rooms...")
-    rooms = json_to_objects_rooms("db\chambre_small.json")
+    rooms = json_to_objects_rooms("db/test-rooms.json")
     print("Rooms loaded.")
     print("Launching MILP solver :")
     attributions = milp_solve(requests, rooms, parameters)

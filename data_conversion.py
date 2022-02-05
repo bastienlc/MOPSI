@@ -74,6 +74,13 @@ def json_to_objects_rooms(rooms_file):
 
 
 def write_attribution_matrix(attributions, requests, instance_name):
+    """
+    Export solution as a matrix where cell (i, j) gives the room assigned to the students of id i and j.
+    :param attributions: list of Attributions given by the solution.
+    :param requests: list of the requests of the instance.
+    :param instance_name: name of the instance used to write the file name.
+    :return: Nothing. Writes a csv containing the matrix.
+    """
     nb_requests = len(requests)
     requests.sort(key=lambda request: request.student_id)
     id_to_idx = {requests[k].student_id: k for k in range(nb_requests)}
@@ -102,8 +109,16 @@ def write_attribution_matrix(attributions, requests, instance_name):
             solution_writer.writerow(row)
 
 
-def write_attributions_requests_wise(attributions, instance_name):
+def write_attributions_requests_wise(attributions, requests, instance_name):
+    """
+    Exports the solutions as a list of requests with their assigned room and their roommate, if any.
+    :param attributions: list of Attributions given by the solution.
+    :param requests: list of the requests of the instance.
+    :param instance_name: name of the instance used to write the file name.
+    :return: Nothing. Writes a csv file containing the list of attributions and the list of unsatisfied requests.
+    """
     attributions.sort(key=lambda attribution: attribution.request.student_id)
+    satisfied_requests = {request.student_id: False for request in requests}
     with open(f'solutions/sol_{instance_name}_request-wise.csv', 'w', newline='') as csvfile:
         solution_writer = csv.writer(csvfile, delimiter=';')
         solution_writer.writerow(
@@ -112,15 +127,23 @@ def write_attributions_requests_wise(attributions, instance_name):
         for attribution in attributions:
             request = attribution.request
             room = attribution.room
-            row = [
-                request.student_id,
-                request.gender,
-                request.scholarship,
-                request.distance,
-                request.prefered_room_type,
-                request.accept_other_type,
-                request.shotgun_rank,
-            ]
+            row = [request.student_id]
+            if request.gender == -1:
+                row.append("homme")
+            elif request.gender == 1:
+                row.append("femme")
+            else:
+                row.append("non precisé")
+            row += [request.scholarship, request.distance]
+            if request.prefered_room_type < 0:
+                row.append("sans préférence")
+            elif request.prefered_room_type == 0:
+                row.append("simple")
+            elif request.prefered_room_type == 1:
+                row.append("binomée")
+            else:
+                row.append("double")
+            row += [request.accept_other_type, request.shotgun_rank]
             if request.has_mate:
                 row.append(request.mate_id)
             else:
@@ -132,9 +155,43 @@ def write_attributions_requests_wise(attributions, instance_name):
             if mate:
                 row += [mate]
             solution_writer.writerow(row)
+            satisfied_requests[request.student_id] = True
+
+        solution_writer.writerow(["=========================================================================================================================================================="])
+        solution_writer.writerow(["Demandes non satisfaites :"])
+        for request in requests:
+            if not satisfied_requests[request.student_id]:
+                row = [request.student_id]
+                if request.gender == -1:
+                    row.append("homme")
+                elif request.gender == 1:
+                    row.append("femme")
+                else:
+                    row.append("non precisé")
+                row += [request.scholarship, request.distance]
+                if request.prefered_room_type < 0:
+                    row.append("sans préférence")
+                elif request.prefered_room_type == 0:
+                    row.append("simple")
+                elif request.prefered_room_type == 1:
+                    row.append("binomée")
+                else:
+                    row.append("double")
+                row += [request.accept_other_type, request.shotgun_rank]
+                if request.has_mate:
+                    row.append(request.mate_id)
+                else:
+                    row.append("")
+                solution_writer.writerow(row)
 
 
 def write_attributions_rooms_wise(rooms, instance_name):
+    """
+    Exports the solutions as a list of rooms with their assigned students.
+    :param rooms: list of Rooms with their students field filled during the resolution.
+    :param instance_name: name of the instance used to write the file name.
+    :return: Nothing. Writes a csv file containing the list of rooms with their students.
+    """
     rooms.sort(key=lambda room: room.room_id)
     with open(f'solutions/sol_{instance_name}_rooms-wise.csv', 'w', newline='') as csvfile:
         solution_writer = csv.writer(csvfile, delimiter=';')
@@ -146,7 +203,7 @@ def write_attributions_rooms_wise(rooms, instance_name):
 
 def write_solutions(attributions, requests, rooms, instance_name):
     write_attribution_matrix(attributions, requests, instance_name)
-    write_attributions_requests_wise(attributions, instance_name)
+    write_attributions_requests_wise(attributions, requests, instance_name)
     write_attributions_rooms_wise(rooms, instance_name)
 
 
