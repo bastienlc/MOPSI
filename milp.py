@@ -168,9 +168,6 @@ def milp_solve(requests, rooms, parameters):
 
     print_pairings(requests_range, rooms_range, m, g)
 
-
-
-
     return
 
 

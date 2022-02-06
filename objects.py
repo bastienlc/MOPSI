@@ -14,6 +14,9 @@ class Request:
             self.mate_id = mate_id
         self.shotgun_rank = shotgun_rank
 
+    def absolute_score(self, parameters):
+        return 1 + self.scholarship*parameters["grant_parameter"] + self.distance*parameters["distance_parameter"] + self.shotgun_rank*parameters["shotgun_parameter"]
+
     def __str__(self):
         return "\nstudent_id: " + str(self.student_id)\
                + "\ngender: " + str(self.gender)\
