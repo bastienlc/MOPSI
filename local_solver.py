@@ -1,5 +1,7 @@
 import params
 from params import parameters
+from copy import deepcopy
+import random
 
 
 def compute_score(attributions, requests, rooms):
@@ -24,20 +26,43 @@ def compute_score(attributions, requests, rooms):
     return score
 
 
+def switch_students_in_double_rooms(attributions):
+    attribution_1 = None
+    attribution_2 = None
+    for k, attribution in enumerate(attributions):
+        if attribution.room.capacity == 2:
+            if attribution_1 is None:
+                if random.randint(k, len(attributions))/len(attributions) > 0.5:  # randomization
+                    attribution_1 = attribution
+            elif attribution_2 is None:
+                if random.randint(k, len(attributions)) / len(attributions) > 0.5:  # randomization
+                    attribution_2 = attribution
+            else:
+                break
+
+    if attribution_2 is None:
+        return attributions
+
+    attribution_1.room, attribution_1.mate, attribution_2.room, attribution_2.mate = attribution_2.room, attribution_2.mate, attribution_1.room, attribution_1.mate
+    return attributions
+
+
 def local_changes(attributions):
-    return attributions  # Do local changes here
+    return switch_students_in_double_rooms(attributions)
 
 
 def local_solver(attributions, requests, rooms, N):
     score = compute_score(attributions, requests, rooms)
     for k in range(N):
-        temp_attributions = local_changes(attributions)
+        temp_attributions = local_changes(deepcopy(attributions))
         temp_score = compute_score(temp_attributions, requests, rooms)
         if temp_score < score:
             score = temp_score
             attributions = temp_attributions
-        print("LocalSolver score : ", score)
+        if k % 10 == 0:
+            print("LocalSolver score : ", score)
     return attributions
+
 
 if __name__ == "__main__":
     print("Done")
