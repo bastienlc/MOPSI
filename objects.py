@@ -1,3 +1,6 @@
+import params
+
+
 class Request:
     def __init__(self, student_id, gender, scholarship, distance, prefered_room_type, accept_other_type, has_mate, mate_id, shotgun_rank):
         self.student_id = student_id
@@ -28,6 +31,14 @@ class Request:
                + "\nmate_id: " + str(self.mate_id)\
                + "\nshotgun_rank: " + str(self.shotgun_rank)
 
+    def get_absolute_score(self, parameters=params.parameters):
+        return (
+                parameters["grant_parameter"] * self.scholarship
+                + parameters["distance_parameter"] * (self.distance > params.paris_threshold)
+                + parameters["foreign_parameter"] * (self.distance > params.foreign_threshold)
+                - parameters["shotgun_parameter"] * self.shotgun_rank
+        )
+
 
 
 class Room:
@@ -47,12 +58,12 @@ class Room:
             print("Room type error")
 
     def what_room_type(self):
-        if self.room_type == 1:
-            print("simple")
-        elif self.room_type == 2:
-            print("binômée")
+        if self.room_type == 0:
+            return "simple"
+        elif self.room_type == 1:
+            return "binômée"
         else:
-            print("double")
+            return "double"
 
     def __str__(self):
         return "\nroom_type: " + str(self.room_type)\
@@ -62,9 +73,18 @@ class Room:
 
 
 class Attribution:
-    def __init__(self, request: Request, room: Room):
+    def __init__(self, request: Request, room: Room, mate_id=None):
         self.request = request
         self.room = room
+        self.mate = mate_id
+
+    def set_mate(self, mate_id):
+        self.mate = mate_id
 
     def __str__(self):
-        return "Student " + str(self.request.student_id) + " -- " + "Room " + str(self.room.id)
+        if self.mate:
+            return ("Student " + str(self.request.student_id) +
+                    " -- " + "Room " + str(self.room.room_id) +
+                    " -- " + "With " + str(self.mate))
+        else:
+            return "Student " + str(self.request.student_id) + " -- " + "Room " + str(self.room.room_id) + " -- "  + "Alone"
