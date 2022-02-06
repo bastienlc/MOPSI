@@ -2,6 +2,7 @@ from data_conversion import json_to_objects_rooms, json_to_objects_requests
 import operator
 import random
 from milp import milp_solve
+from local_solver import local_solver
 
 # parameters
 room_preference_bonus_parameter = 0.1
@@ -76,5 +77,8 @@ if NUMBER_OF_GROUPS*ROOM_GROUPS_SIZE<len(rooms):
 print(GROUPS)
 print(ROOM_GROUPS)
 
+attributions = []
 for k in range(NUMBER_OF_GROUPS):
-    milp_solve(GROUPS[k], ROOM_GROUPS[k], parameters)
+    attributions += milp_solve(GROUPS[k], ROOM_GROUPS[k], parameters)
+
+local_solver(attributions, requests, rooms, 1)
