@@ -2,6 +2,7 @@ import gurobipy as gp
 import numpy as np
 from data_conversion import *
 from objects import Attribution
+import params
 from termcolor import colored
 
 
@@ -108,8 +109,8 @@ def milp_solve(requests, rooms, parameters, verbose=True):
     g = [request.gender for request in requests]
     b = [[int(request.has_mate and request.mate_id == request2.student_id) for request2 in requests] for request in requests]
     a = [request.scholarship for request in requests]
-    d = [int(request.distance > 50) for request in requests]
-    f = [request.distance > 800 for request in requests]
+    d = [int(request.distance > params.paris_threshold) for request in requests]
+    f = [request.distance > params.foreign_threshold for request in requests]
     s = [request.shotgun_rank for request in requests]
 
     # Model
@@ -202,36 +203,14 @@ def milp_solve(requests, rooms, parameters, verbose=True):
 
 
 if __name__ == "__main__":
-    # parameters
-    room_preference_bonus_parameter = 0.1
-    room_preference_malus_parameter = 100
-    gender_mix_parameter = 0.2
-    buddy_preference_parameter = 0.2
-
-    grant_parameter = 0.3
-    distance_parameter = 0.3
-    foreign_parameter = 1
-    shotgun_parameter = 0.001
-
-    parameters = {
-        "room_preference_bonus_parameter": room_preference_bonus_parameter,
-        "room_preference_malus_parameter": room_preference_malus_parameter,
-        "gender_mix_parameter": gender_mix_parameter,
-        "buddy_preference_parameter": buddy_preference_parameter,
-        "grant_parameter": grant_parameter,
-        "distance_parameter": distance_parameter,
-        "foreign_parameter": foreign_parameter,
-        "shotgun_parameter": shotgun_parameter
-    }
-
     print("Loading students requests...")
-    requests = json_to_objects_requests("db/test-requests.json")
+    requests = json_to_objects_requests("simple_cases_instances/double-rooms-only_requests.json")
     print("Students requests loaded.")
     print("Loading rooms...")
-    rooms = json_to_objects_rooms("db/test-rooms.json")
+    rooms = json_to_objects_rooms("simple_cases_instances/double-rooms-only_rooms.json")
     print("Rooms loaded.")
     print("Launching MILP solver :")
-    attributions = milp_solve(requests, rooms, parameters)
+    attributions = milp_solve(requests, rooms, params.parameters)
     print("Writing solution files...")
     write_solutions(attributions, requests, rooms, "test")
     print("Done.")

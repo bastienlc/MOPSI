@@ -1,3 +1,6 @@
+import params
+
+
 class Request:
     def __init__(self, student_id, gender, scholarship, distance, prefered_room_type, accept_other_type, has_mate, mate_id, shotgun_rank):
         self.student_id = student_id
@@ -24,6 +27,14 @@ class Request:
                + "\nhas_mate: " + str(self.has_mate)\
                + "\nmate_id: " + str(self.mate_id)\
                + "\nshotgun_rank: " + str(self.shotgun_rank)
+
+    def get_absolute_score(self, parameters=params.parameters):
+        return (
+                parameters["grant_parameter"] * self.scholarship
+                + parameters["distance_parameter"] * (self.distance > params.paris_threshold)
+                + parameters["foreign_parameter"] * (self.distance > params.foreign_threshold)
+                - parameters["shotgun_parameter"] * self.shotgun_rank
+        )
 
 
 
