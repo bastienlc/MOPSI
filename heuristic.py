@@ -26,25 +26,25 @@ parameters = {
     "shotgun_parameter": shotgun_parameter
 }
 
-LARGE = True
+LARGE = False
 
 if LARGE:
     print("Loading students requests...")
-    requests = json_to_objects_requests("eleves_demande.json")
+    requests = json_to_objects_requests("db/eleves_demande.json")
     requests.sort(key=operator.methodcaller('absolute_score', parameters), reverse=True)
     print("Students requests loaded.")
     print("Loading rooms...")
-    rooms = json_to_objects_rooms("chambre.json")
+    rooms = json_to_objects_rooms("db/chambre.json")
     random.shuffle(rooms)
     print("Rooms loaded.")
     GROUP_SIZE = 50
 else:
     print("Loading students requests...")
-    requests = json_to_objects_requests("eleves_demande_small.json")
+    requests = json_to_objects_requests("db/eleves_demande_small.json")
     requests.sort(key=operator.methodcaller('absolute_score', parameters), reverse=True)
     print("Students requests loaded.")
     print("Loading rooms...")
-    rooms = json_to_objects_rooms("chambre_small.json")
+    rooms = json_to_objects_rooms("db/chambre_small.json")
     random.shuffle(rooms)
     print("Rooms loaded.")
     GROUP_SIZE = 3
