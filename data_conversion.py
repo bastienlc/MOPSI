@@ -133,14 +133,14 @@ def write_attributions_requests_wise(attributions, requests, instance_name):
             elif request.gender == 1:
                 row.append("femme")
             else:
-                row.append("non precisé")
+                row.append("non precise")
             row += [request.scholarship, request.distance]
             if request.prefered_room_type < 0:
-                row.append("sans préférence")
+                row.append("sans preference")
             elif request.prefered_room_type == 0:
                 row.append("simple")
             elif request.prefered_room_type == 1:
-                row.append("binomée")
+                row.append("binomee")
             else:
                 row.append("double")
             row += [request.accept_other_type, request.shotgun_rank]
@@ -167,14 +167,14 @@ def write_attributions_requests_wise(attributions, requests, instance_name):
                 elif request.gender == 1:
                     row.append("femme")
                 else:
-                    row.append("non precisé")
+                    row.append("non precise")
                 row += [request.scholarship, request.distance]
                 if request.prefered_room_type < 0:
-                    row.append("sans préférence")
+                    row.append("sans preference")
                 elif request.prefered_room_type == 0:
                     row.append("simple")
                 elif request.prefered_room_type == 1:
-                    row.append("binomée")
+                    row.append("binomee")
                 else:
                     row.append("double")
                 row += [request.accept_other_type, request.shotgun_rank]

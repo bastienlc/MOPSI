@@ -10,11 +10,11 @@ LARGE = False
 
 if LARGE:
     print("Loading students requests...")
-    requests = json_to_objects_requests("eleves_demande.json")
+    requests = json_to_objects_requests("instances/eleves_demande_small.json")
     requests.sort(key=operator.methodcaller('absolute_score', parameters), reverse=True)
     print("Students requests loaded.")
     print("Loading rooms...")
-    rooms = json_to_objects_rooms("chambre.json")
+    rooms = json_to_objects_rooms("instances/chambre_small.json")
     random.shuffle(rooms)
     print("Rooms loaded.")
     GROUP_SIZE = 50

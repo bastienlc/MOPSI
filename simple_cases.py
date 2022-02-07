@@ -49,14 +49,14 @@ def double_rooms_only_inexact(requests, rooms):
     nb_requests = len(requests)
     processed_requests = {request: False for request in requests}
     attributions = []
-    for room in rooms:
+    for room in rooms:  # Assumes there are more (or as many) requests than rooms
         pairs = []
         for i1 in range(nb_requests):
             if processed_requests[requests[i1]]:
-                break
+                continue
             for i2 in range(i1+1, nb_requests):
                 if processed_requests[requests[i2]]:
-                    break
+                    continue
                 pairs.append((requests[i1], requests[i2]))
         pairs_scores = []
         for pair in pairs:
