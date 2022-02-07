@@ -4,6 +4,7 @@ from data_conversion import *
 from objects import Attribution
 import params
 from termcolor import colored
+from local_solver import compute_score
 
 
 def get_z_mat(requests_range, rooms_range, m):
@@ -203,15 +204,25 @@ def milp_solve(requests, rooms, parameters, verbose=True):
     return attributions
 
 
+def dictionnary_from_requests(requests):
+    requests_dictionary = {}
+    for request in requests:
+        requests_dictionary[str(request.student_id)] = request
+    return requests_dictionary
+
+
 if __name__ == "__main__":
     print("Loading students requests...")
-    requests = json_to_objects_requests("simple_cases_instances/double-rooms-only_requests.json")
+    #requests = json_to_objects_requests("simple_cases_instances/double-rooms-only_requests.json")
+    requests = json_to_objects_requests("instances/eleves_demande_small.json")
     print("Students requests loaded.")
     print("Loading rooms...")
-    rooms = json_to_objects_rooms("simple_cases_instances/double-rooms-only_rooms.json")
+    #rooms = json_to_objects_rooms("simple_cases_instances/double-rooms-only_rooms.json")
+    rooms = json_to_objects_rooms("instances/chambre_small.json")
     print("Rooms loaded.")
     print("Launching MILP solver :")
     attributions = milp_solve(requests, rooms, params.parameters)
+    print("Score ", compute_score(attributions, dictionnary_from_requests(requests), rooms))
     print("Writing solution files...")
     write_solutions(attributions, requests, rooms, "test")
     print("Done.")
