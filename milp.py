@@ -4,6 +4,8 @@ from objects import Attribution
 import params
 from termcolor import colored
 from params import files
+from local_solver import compute_score, dictionary_from_requests
+from datetime import datetime
 
 
 def get_z_mat(requests_range, rooms_range, m):
@@ -216,6 +218,10 @@ if __name__ == "__main__":
 
     print("Launching MILP solver :")
     attributions = milp_solve(requests, rooms, params.parameters)
+    score = compute_score(attributions, dictionary_from_requests(requests))
+    score_json = {"score": score, "date": str(datetime.now()).replace(' ', '-')}
+    with open(f'solutions/score.json', 'w') as f:
+        json.dump(score_json, f)
     print("Writing solution files...")
     write_solutions(attributions, requests, rooms, "test")
     print("Done.")
