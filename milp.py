@@ -204,11 +204,6 @@ def milp_solve(requests, rooms, parameters, verbose=True):
     return attributions
 
 
-def dictionnary_from_requests(requests):
-    requests_dictionary = {}
-    for request in requests:
-        requests_dictionary[str(request.student_id)] = request
-    return requests_dictionary
 
 
 if __name__ == "__main__":
@@ -222,7 +217,6 @@ if __name__ == "__main__":
     print("Rooms loaded.")
     print("Launching MILP solver :")
     attributions = milp_solve(requests, rooms, params.parameters)
-    print("Score ", compute_score(attributions, dictionnary_from_requests(requests), rooms))
     print("Writing solution files...")
     write_solutions(attributions, requests, rooms, "test")
     print("Done.")
