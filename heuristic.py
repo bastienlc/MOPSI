@@ -4,37 +4,28 @@ import random
 from milp import milp_solve
 from local_solver import local_solver, compute_score, dictionary_from_requests, dictionary_from_rooms
 
-from params import parameters
+from params import parameters, files
 
-LARGE = True
+print("========================================= PREPARING HEURISTIC ========================================")
 
-if LARGE:
-    print("Loading students requests...")
-    requests = json_to_objects_requests("instances/eleves_demande_500.json")
-    requests.sort(key=operator.methodcaller('absolute_score', parameters), reverse=True)
-    print("Students requests loaded.")
-    print("Loading rooms...")
-    rooms = json_to_objects_rooms("instances/chambre_large.json")
-    random.shuffle(rooms)
-    print("Rooms loaded.")
-    GROUP_SIZE = 40
-else:
-    print("Loading students requests...")
-    requests = json_to_objects_requests("instances/eleves_demande_small.json")
-    requests.sort(key=operator.methodcaller('absolute_score', parameters), reverse=True)
-    print("Students requests loaded.")
-    print("Loading rooms...")
-    rooms = json_to_objects_rooms("instances/chambre_small.json")
-    random.shuffle(rooms)
-    print("Rooms loaded.")
-    GROUP_SIZE = 3
+instance = "large"
+rooms_file, requests_file = files[instance]
 
+print("Loading requests and rooms [", instance, "] ...")
+requests = json_to_objects_requests(requests_file)
+rooms = json_to_objects_rooms(rooms_file)
+requests.sort(key=operator.methodcaller('absolute_score', parameters), reverse=True)
+random.shuffle(rooms)
 requests_dictionary = dictionary_from_requests(requests)
 rooms_dictionary = dictionary_from_rooms(rooms)
+print("Requests and rooms loaded.")
 
-number_of_places = 0
-for room in rooms:
-    number_of_places += room.capacity
+if instance == "small":
+    GROUP_SIZE = 3
+else:
+    GROUP_SIZE = 40
+
+
 
 requests_groups = []
 
@@ -68,15 +59,23 @@ while room_index < len(rooms) and group_index < number_of_groups:
         capacity = 0
         group_index += 1
 
+print("=========================================== SOLVING GROUPS ===========================================")
+
 attributions = []
 for k in range(number_of_groups):
+    print("-------- SOLVING GROUP ", k+1, "--------")
     attributions += milp_solve(requests_groups[k], room_groups[k], parameters)
+
+print("=========================================== GROUPS SOLVED ===========================================")
+print("====================================== LAUNCHING LOCAL SOLVER =======================================")
 
 print("Score before local solving : ", compute_score(attributions, requests_dictionary))
 
 attributions.sort(key=lambda attribution: attribution.request.student_id)
 attributions = local_solver(attributions, requests_dictionary, rooms_dictionary, 2000)
 
-print("Solution :")
+print("======================================== LOCAL SOLVER ENDED ========================================")
+
+print("============================================= SOLUTION =============================================")
 for attribution in attributions:
     print(attribution)

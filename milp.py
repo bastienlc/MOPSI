@@ -1,10 +1,9 @@
 import gurobipy as gp
-import numpy as np
 from data_conversion import *
 from objects import Attribution
 import params
 from termcolor import colored
-from local_solver import compute_score
+from params import files
 
 
 def get_z_mat(requests_range, rooms_range, m):
@@ -207,14 +206,14 @@ def milp_solve(requests, rooms, parameters, verbose=True):
 
 
 if __name__ == "__main__":
-    print("Loading students requests...")
-    #requests = json_to_objects_requests("simple_cases_instances/double-rooms-only_requests.json")
-    requests = json_to_objects_requests("instances/eleves_demande_small.json")
-    print("Students requests loaded.")
-    print("Loading rooms...")
-    #rooms = json_to_objects_rooms("simple_cases_instances/double-rooms-only_rooms.json")
-    rooms = json_to_objects_rooms("instances/chambre_small.json")
-    print("Rooms loaded.")
+    instance = "small"
+    rooms_file, requests_file = files[instance]
+
+    print("Loading requests and rooms [", instance, "] ...")
+    requests = json_to_objects_requests(requests_file)
+    rooms = json_to_objects_rooms(rooms_file)
+    print("Requests and rooms loaded.")
+
     print("Launching MILP solver :")
     attributions = milp_solve(requests, rooms, params.parameters)
     print("Writing solution files...")
