@@ -2,22 +2,22 @@ from data_conversion import json_to_objects_rooms, json_to_objects_requests
 import operator
 import random
 from milp import milp_solve
-from local_solver import local_solver, compute_score, dictionary_from_requests
+from local_solver import local_solver, compute_score, dictionary_from_requests, dictionary_from_rooms
 
 from params import parameters
 
-LARGE = False
+LARGE = True
 
 if LARGE:
     print("Loading students requests...")
-    requests = json_to_objects_requests("instances/eleves_demande_large.json")
+    requests = json_to_objects_requests("instances/eleves_demande_500.json")
     requests.sort(key=operator.methodcaller('absolute_score', parameters), reverse=True)
     print("Students requests loaded.")
     print("Loading rooms...")
     rooms = json_to_objects_rooms("instances/chambre_large.json")
     random.shuffle(rooms)
     print("Rooms loaded.")
-    GROUP_SIZE = 50
+    GROUP_SIZE = 40
 else:
     print("Loading students requests...")
     requests = json_to_objects_requests("instances/eleves_demande_small.json")
@@ -30,6 +30,7 @@ else:
     GROUP_SIZE = 3
 
 requests_dictionary = dictionary_from_requests(requests)
+rooms_dictionary = dictionary_from_rooms(rooms)
 
 number_of_places = 0
 for room in rooms:
@@ -74,7 +75,7 @@ for k in range(number_of_groups):
 print("Score before local solving : ", compute_score(attributions, requests_dictionary))
 
 attributions.sort(key=lambda attribution: attribution.request.student_id)
-attributions = local_solver(attributions, requests_dictionary, rooms, 1000)
+attributions = local_solver(attributions, requests_dictionary, rooms_dictionary, 2000)
 
 print("Solution :")
 for attribution in attributions:

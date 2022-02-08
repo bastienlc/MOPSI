@@ -1,3 +1,7 @@
+import json
+import random
+
+
 paris_threshold = 50
 foreign_threshold = 800
 
@@ -11,3 +15,44 @@ parameters = {
     "foreign_parameter": 1,  # Bf
     "shotgun_parameter": 0.0001  # Pr
 }
+
+
+def random_requests_json(number_of_requests):
+    requests = []
+    for k in range(1, number_of_requests+1):
+        new_request = {}
+        new_request["id_demande"] = k
+        new_request["mail"] = "eleve" + str(k) + "@test.com"
+        new_request["type_chambre"] = random.choice([1, 2, 3])
+        new_request["remplace"] = random.choice([0, 1])
+        new_request["gender"] = int(random.choice([1, 2]) + (random.random() > 0.99))
+        new_request["mate"] = int(k > 1 and random.random() > 0.96)
+        new_request["mate_email"] = None
+        new_request["boursier"] = int(random.random() > 0.7)
+        new_request["distance"] = random.randint(1000, 4000) if random.random() > 0.9 else random.randint(1, 1000)
+        new_request["demand_time"] = random.randint(1600000000, 1700000000)
+
+        # find a mate for this request :
+        if new_request["mate"]:
+            for request in random.choices(requests, k=len(requests)):
+                if not request["mate"]:
+                    request["mate"] = 1
+                    request["mate_email"] = new_request["mail"]
+                    new_request["mate_email"] = request["mail"]
+                    break
+            if new_request["mate_email"] is None:  # if we could not find a mate
+                new_request["mate"] = 0
+
+        requests.append(new_request)
+
+    new_json = []
+    new_json.append({"type": "header", "version": "5.1.1", "comment": "Export to JSON plugin for PHPMyAdmin"})
+    new_json.append({"type": "database", "name": "admissibles"})
+    new_json.append({"type": "table", "name": "eleves", "database": "admissibles", "data":[]})
+    new_json[2]["data"] = requests
+    with open(f'instances/eleves_demande_{number_of_requests}.json', 'w') as f:
+        json.dump(new_json, f)
+
+
+if __name__ == "__main__":
+    random_requests_json(500)

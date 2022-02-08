@@ -13,6 +13,13 @@ def dictionary_from_requests(requests):
     return requests_dictionary
 
 
+def dictionary_from_rooms(rooms):
+    rooms_dictionary = {}
+    for room in rooms:
+        rooms_dictionary[str(room.room_id)] = room
+    return rooms_dictionary
+
+
 def list_of_students_without_room(attributions, number_of_requests):  # assumes attributions is sorted according to attribution.request.student_id
     results = []
     last_seen = 0  # demands start at id 1
@@ -21,6 +28,19 @@ def list_of_students_without_room(attributions, number_of_requests):  # assumes 
             results += [i for i in range(last_seen+1, attribution.request.student_id)]
         last_seen = attribution.request.student_id
     results += [i for i in range(last_seen+1, number_of_requests+1)]
+    return results
+
+
+def list_of_rooms_not_full(attributions, rooms_dictionary):
+    rooms_capacities = {}
+    for id, room in rooms_dictionary.items():
+        rooms_capacities[str(room.room_id)] = room.capacity
+    for attribution in attributions:
+        rooms_capacities[str(attribution.room.room_id)] -= 1
+    results = []
+    for room_id, capacity_left in rooms_capacities.items():
+        if capacity_left > 0:
+            results.append(int(room_id))
     return results
 
 
@@ -134,7 +154,6 @@ def switch_student_not_chosen_and_student_chosen(attributions, requests_dictiona
     students_without_room = list_of_students_without_room(attributions, len(requests_dictionary))
     if len(students_without_room) == 0:
         return attributions
-
     student_to_add = random.choice(students_without_room)
 
     new_attribution = Attribution(requests_dictionary[str(student_to_add)], attribution_1.room, attribution_1.mate)
@@ -149,29 +168,64 @@ def switch_student_not_chosen_and_student_chosen(attributions, requests_dictiona
     return attributions
 
 
-def add_student_in_room_not_full(attributions, requests_dictionary):
+def add_student_in_room_not_full(attributions, requests_dictionary, rooms_dictionary):
+    rooms_not_full = list_of_rooms_not_full(attributions, rooms_dictionary)
+    if len(rooms_not_full) == 0:
+        return attributions
+    room_not_full = random.choice(rooms_not_full)
+
+    students_without_room = list_of_students_without_room(attributions, len(requests_dictionary))
+    if len(students_without_room) == 0:
+        return attributions
+    student_to_add = random.choice(students_without_room)
+
+    mate = None
+    for attribution in attributions:
+        if attribution.room.room_id == room_not_full:
+            mate = attribution.request.student_id
+            attribution.mate = student_to_add
+
+    new_attribution = Attribution(requests_dictionary[str(student_to_add)], rooms_dictionary[str(room_not_full)], mate)
+    attributions = insert_attribution(attributions, new_attribution)  # to keep attributions sorted
+
     return attributions
 
 
-def local_changes(attributions, requests_dictionary):
-    random_number = random.randint(0, 2)
+def remove_attribution(attributions):
+    if len(attributions) == 0:
+        return attributions
+    attribution_to_remove = random.choice(attributions)
+    if attribution_to_remove.mate is not None:
+        for attribution in attributions:
+            if attribution.request.student_id == attribution_to_remove.mate:
+                attribution.mate = None
+    attributions.remove(attribution_to_remove)
+    return attributions
+
+
+def local_changes(attributions, requests_dictionary, rooms_dictionary):
+    random_number = random.randint(0, 4)
     if random_number == 0:
         return switch_students_in_double_rooms(attributions)
     elif random_number == 1:
         return switch_student_in_simple_room_and_student_in_double_room(attributions)
-    else:
+    elif random_number == 2:
         return switch_student_not_chosen_and_student_chosen(attributions, requests_dictionary)
+    elif random_number == 3:
+        return add_student_in_room_not_full(attributions, requests_dictionary, rooms_dictionary)
+    else:
+        return remove_attribution(attributions)
 
 
-def local_solver(attributions, requests_dictionary, rooms, N):
+def local_solver(attributions, requests_dictionary, rooms_dictionary, n):
     score = compute_score(attributions, requests_dictionary)
-    for k in range(N):
-        temp_attributions = local_changes(deepcopy(attributions), requests_dictionary)
+    for k in range(n):
+        temp_attributions = local_changes(deepcopy(attributions), requests_dictionary, rooms_dictionary)
         temp_score = compute_score(temp_attributions, requests_dictionary)
         if temp_score > score:
             score = temp_score
             attributions = temp_attributions
-        if k % 10 == 0:
+        if k % (n//100) == 0:
             print("LocalSolver score : ", score)
     return attributions
 
