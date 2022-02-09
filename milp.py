@@ -208,7 +208,7 @@ def milp_solve(requests, rooms, parameters, verbose=True):
 
 
 if __name__ == "__main__":
-    instance = "small"
+    instance = "medium"
     rooms_file, requests_file = files[instance]
 
     print("Loading requests and rooms [", instance, "] ...")

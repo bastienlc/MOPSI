@@ -3,7 +3,7 @@ from params import parameters
 from copy import deepcopy
 import random
 from objects import Attribution
-import bisect
+import math
 
 
 def dictionary_from_requests(requests):
@@ -217,16 +217,31 @@ def local_changes(attributions, requests_dictionary, rooms_dictionary):
         return remove_attribution(attributions)
 
 
-def local_solver(attributions, requests_dictionary, rooms_dictionary, n):
+def local_solver(attributions, requests_dictionary, rooms_dictionary, n, T=0.01, alpha=0.9999):
     score = compute_score(attributions, requests_dictionary)
-    for k in range(n):
+    best_score = score
+    iterations_without_increase = 0
+    k = 0
+    while k < n and T > 1e-5:
+        k += 1
         temp_attributions = local_changes(deepcopy(attributions), requests_dictionary, rooms_dictionary)
         temp_score = compute_score(temp_attributions, requests_dictionary)
         if temp_score > score:
             score = temp_score
             attributions = temp_attributions
+            T *= alpha
+        else:
+            iterations_without_increase += 1
+            if random.random() < math.exp((temp_score-score)/T) and (best_score-temp_score)/best_score < T:
+                score = temp_score
+                attributions = temp_attributions
+            if iterations_without_increase == 10:
+                T /= alpha
+                iterations_without_increase = 0
+        if score > best_score:
+            best_score = score
         if k % (n//100) == 0:
-            print("LocalSolver score : ", score)
+            print("LocalSolver score : ", score, " ------ Température : ", T)
     return attributions
 
 

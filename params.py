@@ -18,6 +18,7 @@ parameters = {
 
 files = {
     "small": ("instances/chambre_small.json", "instances/eleves_demande_small.json"),
+    "medium": ("instances/chambre_medium.json", "instances/eleves_demande_100.json"),
     "large": ("instances/chambre_large.json", "instances/eleves_demande_500.json"),
     "double_rooms_only": ("simple_cases_instances/double-rooms-only_rooms.json", "simple_cases_instances/double-rooms-only_requests.json"),
     "simple_rooms_only": ("simple_cases_instances/simple-rooms-only_rooms.json", "simple_cases_instances/simple-rooms-only_requests.json")

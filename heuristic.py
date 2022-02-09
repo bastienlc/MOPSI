@@ -8,7 +8,7 @@ from params import parameters, files
 
 print("========================================= PREPARING HEURISTIC ========================================")
 
-instance = "large"
+instance = "medium"
 rooms_file, requests_file = files[instance]
 
 print("Loading requests and rooms [", instance, "] ...")
@@ -24,6 +24,11 @@ if instance == "small":
     GROUP_SIZE = 3
 else:
     GROUP_SIZE = 40
+
+if instance == "small" or instance == "medium":
+    n = 10000
+else:
+    n = 2000
 
 
 
@@ -72,7 +77,7 @@ print("====================================== LAUNCHING LOCAL SOLVER ===========
 print("Score before local solving : ", compute_score(attributions, requests_dictionary))
 
 attributions.sort(key=lambda attribution: attribution.request.student_id)
-attributions = local_solver(attributions, requests_dictionary, rooms_dictionary, 2000)
+attributions = local_solver(attributions, requests_dictionary, rooms_dictionary, n)
 
 print("======================================== LOCAL SOLVER ENDED ========================================")
 
