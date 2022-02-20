@@ -94,8 +94,6 @@ def milp_solve(requests, rooms, parameters, verbose=True):
 
     # Parameters
     room_preference_bonus_parameter = parameters["room_preference_bonus_parameter"]
-    room_preference_malus_parameter = parameters["room_preference_malus_parameter"]
-    gender_mix_parameter = parameters["gender_mix_parameter"]
     buddy_preference_parameter = parameters["buddy_preference_parameter"]
     grant_parameter = parameters["grant_parameter"]
     distance_parameter = parameters["distance_parameter"]
@@ -103,16 +101,16 @@ def milp_solve(requests, rooms, parameters, verbose=True):
     shotgun_parameter = parameters["shotgun_parameter"]
 
     # Import data and make notations match the overleaf
-    r = [room.room_type for room in rooms]
+    c = [room.room_type for room in rooms]
     p = [[int(request.prefered_room_type == k) for k in range(nb_room_types)] for request in requests]
     q = [int(not request.accept_other_type) for request in requests]
     g = [request.gender for request in requests]
     b = [[int(request.has_mate and request.mate_id == request2.student_id) for request2 in requests] for request in
          requests]
-    a = [request.scholarship for request in requests]
+    s = [request.scholarship for request in requests]
     d = [int(request.distance > params.paris_threshold) for request in requests]
     f = [request.distance > params.foreign_threshold for request in requests]
-    s = [request.shotgun_rank for request in requests]
+    r = [request.shotgun_rank for request in requests]
 
     # Model
     m = gp.Model("admissibles_MILP")
@@ -124,18 +122,15 @@ def milp_solve(requests, rooms, parameters, verbose=True):
 
     # Set objective
     coeff_on_x = {
-        (i, j): (1 + room_preference_bonus_parameter * p[i][r[j]] - room_preference_malus_parameter * (1 - p[i][r[j]]) *
-                 q[i]
-                 + grant_parameter * a[i] + distance_parameter * d[i] + foreign_parameter * f[i] - shotgun_parameter *
-                 s[i])
+        (i, j): (1 + distance_parameter * d[i] + foreign_parameter * f[i] + grant_parameter * s[i] - shotgun_parameter
+                 * r[i] + room_preference_bonus_parameter * p[i][c[j]])
         for i in requests_range
         for j in rooms_range
     }
     sum_on_x = x.prod(coeff_on_x)
 
     coeff_on_z = {
-        (i_1, i_2, j): - gender_mix_parameter * abs(g[i_1] * g[i_2] * (g[i_1] - g[i_2])) * (1 - b[i_1][i_2])
-                       + buddy_preference_parameter * b[i_1][i_2]
+        (i_1, i_2, j): buddy_preference_parameter * b[i_1][i_2]
         for i_1 in requests_range
         for i_2 in range(i_1 + 1, nb_requests)
         for j in rooms_range
@@ -145,6 +140,9 @@ def milp_solve(requests, rooms, parameters, verbose=True):
     m.setObjective(sum_on_x + sum_on_z, gp.GRB.MAXIMIZE)
 
     # Add constraints
+    m.addConstrs(x.sum(i, '*') <= 1 for i in requests_range)
+    m.addConstrs(x.sum('*', j) <= min(2, c[j] + 1) for j in rooms_range)
+
     m.addConstrs(
         z[i_1, i_2, j] <= x[i_1, j]
         for i_1 in requests_range for i_2 in range(i_1 + 1, nb_requests) for j in rooms_range
@@ -158,8 +156,22 @@ def milp_solve(requests, rooms, parameters, verbose=True):
         for i_1 in requests_range for i_2 in range(i_1 + 1, nb_requests) for j in rooms_range
     )
 
-    m.addConstrs(x.sum(i, '*') <= 1 for i in requests_range)
-    m.addConstrs(x.sum('*', j) <= min(2, r[j] + 1) for j in rooms_range)
+    coeff_on_z_constraints = [
+        {
+            (i_1, i_2, j): abs(g[i_1] * g[i_2] * (g[i_1]-g[i_2])) * (1 - b[i_1][i_2])
+            for i_1 in requests_range
+            for i_2 in range(i_1 + 1, nb_requests)
+        }
+        for j in rooms_range
+    ]
+    m.addConstrs(
+        z.prod(coeff_on_z_constraints[j]) == 0 for j in rooms_range if c[j] >= 1
+    )
+    m.addConstrs(
+        x[i, j] * (1-p[i][c[j]]) * q[i] == 0
+        for i in requests_range
+        for j in rooms_range
+    )
 
     # Solve problem
     m.update()
