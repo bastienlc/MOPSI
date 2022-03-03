@@ -1,0 +1,13 @@
+[
+{"type":"header","comment":"This is to match the format given by phpmyadmin export"},
+{"type":"database","name":"admissibles"},
+{"type":"table","name":"chambre","database":"admissibles","data":
+[
+{"numero":"1","type":"3"},
+{"numero":"2","type":"3"},
+{"numero":"3","type":"3"},
+{"numero":"4","type":"3"},
+{"numero":"5","type":"1"}
+]
+}
+]

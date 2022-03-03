@@ -1,32 +1,10 @@
 import operator
-
-
-class Request:
-    def __init__(self, person_id, score, other_person=False):
-        self.student_id = person_id
-        self.score = score
-        if not other_person:
-            self.has_buddy = False
-            self.buddy_id = None
-        else:
-            self.has_buddy = True
-            self.buddy_id = other_person
-
-
-class Room:
-    def __init__(self, room_id, capacity):
-        self.id = room_id
-        self.capacity = capacity
-        self.students = []
-
-
-class Attribution:
-    def __init__(self, request: Request, room: Room):
-        self.request = request
-        self.room = room
-
-    def __str__(self):
-        return "Student " + str(self.request.student_id) + " -- " + "Room " + str(self.room.id)
+import simple_cases
+import time
+from local_solver import compute_score_no_penalisation
+from milp import milp_solve
+from data_conversion import *
+from objects import Request, Room, Attribution
 
 
 def get_buddy_request(requests_list, buddy_id):
@@ -130,18 +108,45 @@ def attribution_with_buddy(requests, rooms):
     return attributions
 
 
-if __name__ == '__main__':
-    requests = []
-    rooms = []
-    for k in range(8):
-        requests.append(Request(k+1, 10*k))
-    requests.append(Request(9, 10*8, 10))
-    requests.append(Request(10, 10 * 9, 9))
-    for k in range(5):
-        rooms.append(Room(k+1, 1))
-    rooms.append(Room(6, 2))
+def test_simple_case_and_compare_with_milp(simple_case, algorithm, test_case):
+    """
+    Tests a simple case algorithm on a given test case and compares the result with the one given by the MILP.
+    :param simple_case: string naming the simple case to be tested
+    :param algorithm: function implementing the algorithm to be tested
+    :param test_case: number of the test case to be tested on
+    :return: Nothing. Prints the gap between the values of the objective returned by the algorithm and the MILP.
+    Prints the execution time difference between the algorithm and the MILP. Also, writes the solution in csv files.
+    """
+    requests = json_to_objects_requests(f"simple_cases_instances/{simple_case}/{simple_case}_test_{test_case}_requests.json")
+    rooms = json_to_objects_rooms(f"simple_cases_instances/{simple_case}/{simple_case}_test_{test_case}_rooms.json")
+    t0_algo = time.time()
+    algo_attributions = algorithm(requests, rooms)
+    time_algo = time.time() - t0_algo
+    algo_score = compute_score_no_penalisation(algo_attributions, requests, rooms)
+    write_solutions(algo_attributions, requests, rooms, simple_case)
+    t0_milp = time.time()
+    milp_attributions = milp_solve(requests, rooms)
+    time_milp = time.time() - t0_milp
+    milp_score = compute_score_no_penalisation(milp_attributions, requests, rooms)
+    write_solutions(milp_attributions, requests, rooms, "test")
+    print("objective gap :", algo_score - milp_score)
+    print("time gap :", time_algo - time_milp)
 
-    #attributions = simple_attribution(requests, rooms)
-    attributions = attribution_with_buddy(requests, rooms)
-    for attribution in attributions:
-        print(attribution)
+
+if __name__ == '__main__':
+    # requests = []
+    # rooms = []
+    # for k in range(8):
+    #     requests.append(Request(k+1, 10*k))
+    # requests.append(Request(9, 10*8, 10))
+    # requests.append(Request(10, 10 * 9, 9))
+    # for k in range(5):
+    #     rooms.append(Room(k+1, 1))
+    # rooms.append(Room(6, 2))
+    #
+    # #attributions = simple_attribution(requests, rooms)
+    # attributions = attribution_with_buddy(requests, rooms)
+    # for attribution in attributions:
+    #     print(attribution)
+
+    test_simple_case_and_compare_with_milp("many-double-one-simple-rooms", simple_cases.many_double_one_simple_rooms, 5)

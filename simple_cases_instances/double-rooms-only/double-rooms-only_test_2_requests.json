@@ -1,0 +1,20 @@
+[
+{"type":"header","comment":"This is to match the format given by phpmyadmin export"},
+{"type":"database","name":"admissibles"},
+{"type":"table","name":"eleves","database":"admissibles","data":
+[
+{"id_demande":"1","mail":"1@mail.com","type_chambre":"1","remplace":"1","gender":"1","mate":"1","mate_email":"2@mail.com","boursier":"0","distance":"30","demand_time":"1"},
+{"id_demande":"2","mail":"2@mail.com","type_chambre":"1","remplace":"1","gender":"1","mate":"1","mate_email":"1@mail.com","boursier":"1","distance":"45","demand_time":"2"},
+{"id_demande":"3","mail":"3@mail.com","type_chambre":"1","remplace":"1","gender":"1","mate":"1","mate_email":"4@mail.com","boursier":"0","distance":"40","demand_time":"3"},
+{"id_demande":"4","mail":"4@mail.com","type_chambre":"1","remplace":"1","gender":"2","mate":"1","mate_email":"3@mail.com","boursier":"0","distance":"80","demand_time":"10"},
+{"id_demande":"5","mail":"5@mail.com","type_chambre":"1","remplace":"1","gender":"1","mate":"1","mate_email":"6@mail.com","boursier":"0","distance":"50","demand_time":"5"},
+{"id_demande":"6","mail":"6@mail.com","type_chambre":"1","remplace":"1","gender":"3","mate":"1","mate_email":"5@mail.com","boursier":"0","distance":"85","demand_time":"6"},
+{"id_demande":"7","mail":"7@mail.com","type_chambre":"1","remplace":"1","gender":"1","mate":"1","mate_email":"8@mail.com","boursier":"1","distance":"50","demand_time":"7"},
+{"id_demande":"8","mail":"8@mail.com","type_chambre":"3","remplace":"1","gender":"1","mate":"1","mate_email":"7@mail.com","boursier":"0","distance":"1000","demand_time":"8"},
+{"id_demande":"9","mail":"9@mail.com","type_chambre":"1","remplace":"1","gender":"1","mate":"0","mate_email":null,"boursier":"1","distance":"42","demand_time":"9"},
+{"id_demande":"10","mail":"10@mail.com","type_chambre":"3","remplace":"1","gender":"1","mate":"0","mate_email":null,"boursier":"0","distance":"20","demand_time":"10"},
+{"id_demande":"11","mail":"11@mail.com","type_chambre":"1","remplace":"1","gender":"1","mate":"0","mate_email":null,"boursier":"1","distance":"150","demand_time":"11"},
+{"id_demande":"12","mail":"12@mail.com","type_chambre":"1","remplace":"1","gender":"1","mate":"0","mate_email":null,"boursier":"0","distance":"10","demand_time":"12"}
+]
+}
+]

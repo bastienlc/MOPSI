@@ -17,9 +17,6 @@ class Request:
             self.mate_id = mate_id
         self.shotgun_rank = shotgun_rank
 
-    def absolute_score(self, parameters):
-        return 1 + self.scholarship*parameters["grant_parameter"] + self.distance*parameters["distance_parameter"] + self.shotgun_rank*parameters["shotgun_parameter"]
-
     def __str__(self):
         return "\nstudent_id: " + str(self.student_id)\
                + "\ngender: " + str(self.gender)\
@@ -33,12 +30,12 @@ class Request:
 
     def get_absolute_score(self, parameters=params.parameters):
         return (
-                parameters["grant_parameter"] * self.scholarship
+                1
+                + parameters["grant_parameter"] * self.scholarship
                 + parameters["distance_parameter"] * (self.distance > params.paris_threshold)
                 + parameters["foreign_parameter"] * (self.distance > params.foreign_threshold)
                 - parameters["shotgun_parameter"] * self.shotgun_rank
         )
-
 
 
 class Room:

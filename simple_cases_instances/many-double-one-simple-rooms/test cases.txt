@@ -1,0 +1,6 @@
+0 : an ordinary and complete test case
+1 : number of requests = total capacity
+2 : several requests to be together (mixed genders or not, same preferences or not...)
+3 : all same request
+4 : only one preference for simple room
+5 : bigger sample (removed from github)
