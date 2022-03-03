@@ -1,0 +1,18 @@
+[
+{"type":"header","version":"5.1.1","comment":"Export to JSON plugin for PHPMyAdmin"},
+{"type":"database","name":"admissibles"},
+{"type":"table","name":"eleves","database":"admissibles","data":
+[
+{"id_demande":"1","mail":"eleve1@gmail.com","type_chambre":"1","remplace":"1","gender":"2","mate":"0","mate_email":null,"boursier":"0","distance":"600","demand_time":"1623866495"},
+{"id_demande":"2","mail":"eleve2@gmail.com","type_chambre":"1","remplace":"1","gender":"1","mate":"0","mate_email":null,"boursier":"0","distance":"50","demand_time":"1623866452"},
+{"id_demande":"3","mail":"eleve3@gmail.com","type_chambre":"1","remplace":"1","gender":"2","mate":"0","mate_email":null,"boursier":"0","distance":"600","demand_time":"1623866455"},
+{"id_demande":"4","mail":"eleve4@gmail.com","type_chambre":"1","remplace":"1","gender":"1","mate":"0","mate_email":null,"boursier":"0","distance":"22","demand_time":"1623866471"},
+{"id_demande":"5","mail":"eleve5@gmail.com","type_chambre":"1","remplace":"1","gender":"2","mate":"0","mate_email":null,"boursier":"0","distance":"358","demand_time":"1623866473"},
+{"id_demande":"6","mail":"eleve6@gmail.com","type_chambre":"1","remplace":"1","gender":"2","mate":"0","mate_email":null,"boursier":"0","distance":"1400","demand_time":"1623866474"},
+{"id_demande":"7","mail":"eleve7@gmail.com","type_chambre":"1","remplace":"1","gender":"2","mate":"0","mate_email":null,"boursier":"1","distance":"792","demand_time":"1623866476"},
+{"id_demande":"8","mail":"eleve8@gmail.com","type_chambre":"1","remplace":"1","gender":"2","mate":"0","mate_email":null,"boursier":"0","distance":"330","demand_time":"1623866476"},
+{"id_demande":"9","mail":"eleve9@gmail.com","type_chambre":"1","remplace":"1","gender":"2","mate":"0","mate_email":null,"boursier":"1","distance":"40","demand_time":"1623866478"},
+{"id_demande":"10","mail":"eleve10@gmail.com","type_chambre":"1","remplace":"1","gender":"2","mate":"0","mate_email":null,"boursier":"0","distance":"780","demand_time":"1623869563"}
+]
+}
+]

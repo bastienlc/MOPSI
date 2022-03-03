@@ -1,0 +1,13 @@
+[
+{"type":"header","version":"5.1.1","comment":"Export to JSON plugin for PHPMyAdmin"},
+{"type":"database","name":"admissibles"},
+{"type":"table","name":"chambre","database":"admissibles","data":
+[
+{"numero":"1","type":"1"},
+{"numero":"2","type":"1"},
+{"numero":"3","type":"1"},
+{"numero":"4","type":"2"},
+{"numero":"5","type":"3"}
+]
+}
+]

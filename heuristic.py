@@ -2,85 +2,85 @@ from data_conversion import json_to_objects_rooms, json_to_objects_requests
 import operator
 import random
 from milp import milp_solve
-from local_solver import local_solver, compute_score
+from local_solver import local_solver, compute_score, dictionary_from_requests, dictionary_from_rooms
 
-# parameters
-room_preference_bonus_parameter = 0.1
-room_preference_malus_parameter = 100
-gender_mix_parameter = 0.2
-buddy_preference_parameter = 0.2
+from params import parameters, files
 
-grant_parameter = 0.3
-distance_parameter = 0.3
-foreign_parameter = 1
-shotgun_parameter = 0.001
+print("========================================= PREPARING HEURISTIC ========================================")
 
-parameters = {
-    "room_preference_bonus_parameter": room_preference_bonus_parameter,
-    "room_preference_malus_parameter": room_preference_malus_parameter,
-    "gender_mix_parameter": gender_mix_parameter,
-    "buddy_preference_parameter": buddy_preference_parameter,
-    "grant_parameter": grant_parameter,
-    "distance_parameter": distance_parameter,
-    "foreign_parameter": foreign_parameter,
-    "shotgun_parameter": shotgun_parameter
-}
+instance = "medium"
+rooms_file, requests_file = files[instance]
 
-LARGE = False
+print("Loading requests and rooms [", instance, "] ...")
+requests = json_to_objects_requests(requests_file)
+rooms = json_to_objects_rooms(rooms_file)
+requests.sort(key=operator.methodcaller('absolute_score', parameters), reverse=True)
+random.shuffle(rooms)
+requests_dictionary = dictionary_from_requests(requests)
+rooms_dictionary = dictionary_from_rooms(rooms)
+print("Requests and rooms loaded.")
 
-if LARGE:
-    print("Loading students requests...")
-    requests = json_to_objects_requests("db/eleves_demande.json")
-    requests.sort(key=operator.methodcaller('absolute_score', parameters), reverse=True)
-    print("Students requests loaded.")
-    print("Loading rooms...")
-    rooms = json_to_objects_rooms("db/chambre.json")
-    random.shuffle(rooms)
-    print("Rooms loaded.")
-    GROUP_SIZE = 50
-else:
-    print("Loading students requests...")
-    requests = json_to_objects_requests("db/eleves_demande_small.json")
-    requests.sort(key=operator.methodcaller('absolute_score', parameters), reverse=True)
-    print("Students requests loaded.")
-    print("Loading rooms...")
-    rooms = json_to_objects_rooms("db/chambre_small.json")
-    random.shuffle(rooms)
-    print("Rooms loaded.")
+if instance == "small":
     GROUP_SIZE = 3
+else:
+    GROUP_SIZE = 40
 
-number_of_places = 0
-for room in rooms:
-    number_of_places += room.capacity
+if instance == "small" or instance == "medium":
+    n = 10000
+else:
+    n = 2000
 
-GROUPS = []
+
+
+requests_groups = []
 
 for k, request in enumerate(requests):
     if k % GROUP_SIZE == 0:
         if k > 0:
-            GROUPS.append(group)
+            requests_groups.append(group)
         group = []
     group.append(request)
-GROUPS.append(group)
+requests_groups.append(group)
 
-NUMBER_OF_GROUPS = len(GROUPS)
+number_of_groups = len(requests_groups)
 
-ROOM_GROUPS_SIZE = len(rooms)//NUMBER_OF_GROUPS
-ROOM_GROUPS = [[] for k in range(NUMBER_OF_GROUPS)]
+ROOM_GROUPS_SIZE = len(rooms) // number_of_groups
+room_groups = [[] for k in range(number_of_groups)]
 
-for k in range(NUMBER_OF_GROUPS):
-    ROOM_GROUPS[k] = rooms[k*ROOM_GROUPS_SIZE:(k+1)*ROOM_GROUPS_SIZE]
+room_index = 0
+group_index = 0
+capacity = 0
+objective = 0
+while room_index < len(rooms) and group_index < number_of_groups:
+    if objective == 0:
+        objective = len(requests_groups[group_index])
 
-if NUMBER_OF_GROUPS*ROOM_GROUPS_SIZE<len(rooms):
-    ROOM_GROUPS[-1] += rooms[NUMBER_OF_GROUPS*ROOM_GROUPS_SIZE:]
+    if capacity < objective:
+        room_groups[group_index].append(rooms[room_index])
+        capacity += rooms[room_index].capacity
+        room_index += 1
+    else:
+        objective = 0
+        capacity = 0
+        group_index += 1
 
-print(GROUPS)
-print(ROOM_GROUPS)
+print("=========================================== SOLVING GROUPS ===========================================")
 
 attributions = []
-for k in range(NUMBER_OF_GROUPS):
-    attributions += milp_solve(GROUPS[k], ROOM_GROUPS[k], parameters)
+for k in range(number_of_groups):
+    print("-------- SOLVING GROUP ", k+1, "--------")
+    attributions += milp_solve(requests_groups[k], room_groups[k], parameters)
 
-print("Score before local solving : ", compute_score(attributions, requests, rooms))
+print("=========================================== GROUPS SOLVED ===========================================")
+print("====================================== LAUNCHING LOCAL SOLVER =======================================")
 
-local_solver(attributions, requests, rooms, 1000)
+print("Score before local solving : ", compute_score(attributions, requests_dictionary))
+
+attributions.sort(key=lambda attribution: attribution.request.student_id)
+attributions = local_solver(attributions, requests_dictionary, rooms_dictionary, n)
+
+print("======================================== LOCAL SOLVER ENDED ========================================")
+
+print("============================================= SOLUTION =============================================")
+for attribution in attributions:
+    print(attribution)

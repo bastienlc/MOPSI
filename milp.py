@@ -1,9 +1,11 @@
 import gurobipy as gp
-import numpy as np
 from data_conversion import *
 from objects import Attribution
 import params
 from termcolor import colored
+from params import files
+from local_solver import compute_score, dictionary_from_requests
+from datetime import datetime
 
 
 def get_z_mat(requests_range, rooms_range, m):
@@ -216,14 +218,19 @@ def milp_solve(requests, rooms, parameters=params.parameters, verbose=True):
 
 
 if __name__ == "__main__":
-    print("Loading students requests...")
-    requests = json_to_objects_requests("simple_cases_instances/many-double-one-simple-rooms/many-double-one-simple-rooms_test_0_requests.json")
-    print("Students requests loaded.")
-    print("Loading rooms...")
-    rooms = json_to_objects_rooms("simple_cases_instances/many-double-one-simple-rooms/many-double-one-simple-rooms_test_0_rooms.json")
-    print("Rooms loaded.")
+    instance = "small"
+    rooms_file, requests_file = files[instance]
+
+    print("Loading requests and rooms [", instance, "] ...")
+    requests = json_to_objects_requests(requests_file)
+    rooms = json_to_objects_rooms(rooms_file)
+    print("Requests and rooms loaded.")
     print("Launching MILP solver :")
     attributions = milp_solve(requests, rooms, params.parameters)
+    score = compute_score(attributions, dictionary_from_requests(requests))
+    score_json = {"score": score, "date": str(datetime.now()).replace(' ', '-')}
+    with open(f'solutions/score.json', 'w') as f:
+        json.dump(score_json, f)
     print("Writing solution files...")
     write_solutions(attributions, requests, rooms, "test")
     print("Done.")

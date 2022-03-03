@@ -118,16 +118,17 @@ def test_simple_case_and_compare_with_milp(simple_case, algorithm, test_case):
     Prints the execution time difference between the algorithm and the MILP. Also, writes the solution in csv files.
     """
     requests = json_to_objects_requests(f"simple_cases_instances/{simple_case}/{simple_case}_test_{test_case}_requests.json")
+    requests_dictionary = {str(request.student_id): request for request in requests}
     rooms = json_to_objects_rooms(f"simple_cases_instances/{simple_case}/{simple_case}_test_{test_case}_rooms.json")
     t0_algo = time.time()
     algo_attributions = algorithm(requests, rooms)
     time_algo = time.time() - t0_algo
-    algo_score = compute_score_no_penalisation(algo_attributions, requests, rooms)
+    algo_score = compute_score_no_penalisation(algo_attributions, requests_dictionary)
     write_solutions(algo_attributions, requests, rooms, simple_case)
     t0_milp = time.time()
     milp_attributions = milp_solve(requests, rooms)
     time_milp = time.time() - t0_milp
-    milp_score = compute_score_no_penalisation(milp_attributions, requests, rooms)
+    milp_score = compute_score_no_penalisation(milp_attributions, requests_dictionary)
     write_solutions(milp_attributions, requests, rooms, "test")
     print("objective gap :", algo_score - milp_score)
     print("time gap :", time_algo - time_milp)
@@ -149,4 +150,4 @@ if __name__ == '__main__':
     # for attribution in attributions:
     #     print(attribution)
 
-    test_simple_case_and_compare_with_milp("many-double-one-simple-rooms", simple_cases.many_double_one_simple_rooms, 5)
+    test_simple_case_and_compare_with_milp("many-double-one-simple-rooms", simple_cases.many_double_one_simple_rooms, 0)
