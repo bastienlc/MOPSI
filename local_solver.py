@@ -6,28 +6,16 @@ from objects import Attribution
 import math
 
 
-def dictionary_from_requests(requests):
-    requests_dictionary = {}
-    for request in requests:
-        requests_dictionary[str(request.student_id)] = request
-    return requests_dictionary
-
-
-def dictionary_from_rooms(rooms):
-    rooms_dictionary = {}
-    for room in rooms:
-        rooms_dictionary[str(room.room_id)] = room
-    return rooms_dictionary
-
-
-def list_of_students_without_room(attributions, number_of_requests):  # assumes attributions is sorted according to attribution.request.student_id
-    results = []
-    last_seen = 0  # demands start at id 1
+def list_of_students_without_room(attributions, requests_dictionary):
+    requests_list = list(requests_dictionary.values())
+    id_to_idx = {request.student_id: idx for idx, request in enumerate(requests_list)}
+    has_room = [False for _ in range(len(requests_list))]
     for attribution in attributions:
-        if attribution.request.student_id != last_seen + 1:
-            results += [i for i in range(last_seen+1, attribution.request.student_id)]
-        last_seen = attribution.request.student_id
-    results += [i for i in range(last_seen+1, number_of_requests+1)]
+        has_room[id_to_idx[attribution.request.student_id]] = True
+    results = []
+    for i, request in enumerate(requests_list):
+        if not has_room[i]:
+            results.append(requests_list[i].student_id)
     return results
 
 
@@ -172,7 +160,7 @@ def switch_student_not_chosen_and_student_chosen(attributions, requests_dictiona
     if attribution_1 is None:
         return attributions
 
-    students_without_room = list_of_students_without_room(attributions, len(requests_dictionary))
+    students_without_room = list_of_students_without_room(attributions, requests_dictionary)
     if len(students_without_room) == 0:
         return attributions
     student_to_add = random.choice(students_without_room)
@@ -195,7 +183,7 @@ def add_student_in_room_not_full(attributions, requests_dictionary, rooms_dictio
         return attributions
     room_not_full = random.choice(rooms_not_full)
 
-    students_without_room = list_of_students_without_room(attributions, len(requests_dictionary))
+    students_without_room = list_of_students_without_room(attributions, requests_dictionary)
     if len(students_without_room) == 0:
         return attributions
     student_to_add = random.choice(students_without_room)

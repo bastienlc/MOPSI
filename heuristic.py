@@ -1,19 +1,21 @@
-from data_conversion import json_to_objects_rooms, json_to_objects_requests, write_solutions
+from data_conversion import json_to_objects_rooms, json_to_objects_requests, write_solutions, dictionary_from_requests, dictionary_from_rooms, save_attributions
 import operator
 import random
 from milp import milp_solve
-from local_solver import local_solver, compute_score, dictionary_from_requests, dictionary_from_rooms
+from local_solver import local_solver, compute_score
 
 from params import parameters, files
 
 print("========================================= PREPARING HEURISTIC ========================================")
 
-instance = "small"
+instance = "large"
 rooms_file, requests_file = files[instance]
 
 print("Loading requests and rooms [", instance, "] ...")
 requests = json_to_objects_requests(requests_file)
 rooms = json_to_objects_rooms(rooms_file)
+# requests = json_to_objects_requests("db/eleves_demande.json")
+# rooms = json_to_objects_rooms("db/chambre.json")
 requests.sort(key=operator.methodcaller('get_absolute_score', parameters), reverse=True)
 random.shuffle(rooms)
 requests_dictionary = dictionary_from_requests(requests)
@@ -86,5 +88,6 @@ for attribution in attributions:
     print(attribution)
 print("Final score : ", compute_score(attributions, requests_dictionary))
 print("========================================= WRITING SOLUTION =========================================")
-write_solutions(attributions, requests, rooms, "local_solver")
+write_solutions(attributions, requests, rooms, instance)
+save_attributions(attributions, instance)
 print("=============================================== DONE ===============================================")

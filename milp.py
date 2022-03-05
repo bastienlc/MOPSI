@@ -4,7 +4,7 @@ from objects import Attribution
 import params
 from termcolor import colored
 from params import files
-from local_solver import compute_score, dictionary_from_requests
+from local_solver import compute_score
 from datetime import datetime
 
 
