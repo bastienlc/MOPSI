@@ -121,13 +121,14 @@ def switch_students_in_double_rooms(attributions):
     if attribution_2 is None:
         return attributions
 
-    for attribution in attributions:  # too complex
-        if attribution.request.student_id == attribution_1.mate:
-            attribution.mate = attribution_2.request.student_id
-        if attribution.request.student_id == attribution_2.mate:
-            attribution.mate = attribution_1.request.student_id
+    if attribution_1.mate != attribution_2.request.student_id:
+        for attribution in attributions:  # too complex
+            if attribution.request.student_id == attribution_1.mate:
+                attribution.mate = attribution_2.request.student_id
+            if attribution.request.student_id == attribution_2.mate:
+                attribution.mate = attribution_1.request.student_id
+        attribution_1.room, attribution_1.mate, attribution_2.room, attribution_2.mate = attribution_2.room, attribution_2.mate, attribution_1.room, attribution_1.mate
 
-    attribution_1.room, attribution_1.mate, attribution_2.room, attribution_2.mate = attribution_2.room, attribution_2.mate, attribution_1.room, attribution_1.mate
     return attributions
 
 
@@ -240,6 +241,7 @@ def local_changes(attributions, requests_dictionary, rooms_dictionary):
 def local_solver(attributions, requests_dictionary, rooms_dictionary, n, T=0.01, alpha=0.9999):
     score = compute_score(attributions, requests_dictionary)
     best_score = score
+    best_attributions = deepcopy(attributions)
     iterations_without_increase = 0
     k = 0
     while k < n and T > 1e-5:
@@ -260,9 +262,10 @@ def local_solver(attributions, requests_dictionary, rooms_dictionary, n, T=0.01,
                 iterations_without_increase = 0
         if score > best_score:
             best_score = score
+            best_attributions = deepcopy(attributions)
         if k % (n//100) == 0:
             print("LocalSolver score : ", score, " ------ Température : ", T)
-    return attributions
+    return best_attributions
 
 
 if __name__ == "__main__":
