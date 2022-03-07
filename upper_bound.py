@@ -45,7 +45,7 @@ def get_upper_bound_with_milp(requests_list, rooms_list, max_iter=1):
         for room in unfilled_rooms:  # Empty the half-filled rooms
             if room.students:
                 evicted_students = room.students
-                room.students = []
+                room.empty()
                 for student in evicted_students:
                     unassigned_selected_requests_dictionary[student] = selected_requests_list[requests_id_to_idx[student]]
         for request in unassigned_selected_requests_dictionary.values():

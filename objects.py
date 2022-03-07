@@ -62,6 +62,11 @@ class Room:
         else:
             return "double"
 
+    def empty(self):
+        students = self.students
+        self.students = []
+        return students
+
     def __str__(self):
         return "\nroom_type: " + str(self.room_type)\
                + "\nroom_id: " + str(self.room_id)\

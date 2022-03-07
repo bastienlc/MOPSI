@@ -83,6 +83,15 @@ attributions = local_solver(attributions, requests_dictionary, rooms_dictionary,
 
 print("======================================== LOCAL SOLVER ENDED ========================================")
 
+print("================================= FINE-TUNING ATTRIBUTION WITH MILP ================================")
+
+selected_requests = [attribution.request for attribution in attributions]
+for room in rooms:
+    room.empty()
+attributions = milp_solve(selected_requests, rooms)
+
+print("========================================= FINE-TUNING ENDED ========================================")
+
 print("============================================= SOLUTION =============================================")
 for attribution in attributions:
     print(attribution)
