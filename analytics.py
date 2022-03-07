@@ -1,9 +1,10 @@
 import params
-from data_conversion import load_attributions, json_to_objects_requests, json_to_objects_rooms
+from data_conversion import load_attributions, json_to_objects_requests, json_to_objects_rooms, dictionary_from_requests
 import operator
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
+from local_solver import compute_score
 
 
 def distance_selection_ratio(attributions, requests_list, threshold):
@@ -175,17 +176,20 @@ def friendship_satisfaction(attributions):
 
 
 if __name__ == "__main__":
-    # instance = "medium"
-    instance = "real"
+    instance = "large"
+    # instance = "real"
 
     print("Loading attributions...")
-    # rooms_file, requests_file = params.files[instance]
-    rooms_file, requests_file = "db/chambre.json", "db/eleves_demande.json"
+    rooms_file, requests_file = params.files[instance]
+    # rooms_file, requests_file = "db/chambre.json", "db/eleves_demande.json"
     attributions = load_attributions(rooms_file, requests_file, instance)
 
     print("Loading requests and rooms [", instance, "] ...")
     requests = json_to_objects_requests(requests_file)
     rooms = json_to_objects_rooms(rooms_file)
+
+    print("solution score :", compute_score(attributions, dictionary_from_requests(requests)))
+    print("nombre de chambres non occupées :", sum([room.capacity for room in rooms]) - len(attributions))
 
     # Primary criteria
     print("number of requests :", len(requests))

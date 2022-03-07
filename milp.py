@@ -71,7 +71,7 @@ def print_pairings(requests_range, rooms_range, m, g):
                 print("   ", end="")
 
 
-def milp_solve(requests, rooms, parameters=params.parameters, verbose=True):
+def milp_solve(requests, rooms, parameters=params.parameters, verbose=True, constraints=True):
     """
     Solves the MILP version of the allocation problem.
     :param requests: list of the requests of the student, in the shape:
@@ -158,22 +158,23 @@ def milp_solve(requests, rooms, parameters=params.parameters, verbose=True):
         for i_1 in requests_range for i_2 in range(i_1 + 1, nb_requests) for j in rooms_range
     )
 
-    coeff_on_z_constraints = [
-        {
-            (i_1, i_2, j): abs(g[i_1] * g[i_2] * (g[i_1]-g[i_2])) * (1 - b[i_1][i_2])
-            for i_1 in requests_range
-            for i_2 in range(i_1 + 1, nb_requests)
-        }
-        for j in rooms_range
-    ]
-    m.addConstrs(
-        z.prod(coeff_on_z_constraints[j]) == 0 for j in rooms_range if c[j] >= 1
-    )
-    m.addConstrs(
-        x[i, j] * (1-p[i][c[j]]) * q[i] == 0
-        for i in requests_range
-        for j in rooms_range
-    )
+    if constraints:
+        coeff_on_z_constraints = [
+            {
+                (i_1, i_2, j): abs(g[i_1] * g[i_2] * (g[i_1]-g[i_2])) * (1 - b[i_1][i_2])
+                for i_1 in requests_range
+                for i_2 in range(i_1 + 1, nb_requests)
+            }
+            for j in rooms_range
+        ]
+        m.addConstrs(
+            z.prod(coeff_on_z_constraints[j]) == 0 for j in rooms_range if c[j] >= 1
+        )
+        m.addConstrs(
+            x[i, j] * (1-p[i][c[j]]) * q[i] == 0
+            for i in requests_range
+            for j in rooms_range
+        )
 
     # Solve problem
     m.update()
@@ -218,7 +219,7 @@ def milp_solve(requests, rooms, parameters=params.parameters, verbose=True):
 
 
 if __name__ == "__main__":
-    instance = "small"
+    instance = "medium"
     rooms_file, requests_file = files[instance]
 
     print("Loading requests and rooms [", instance, "] ...")
