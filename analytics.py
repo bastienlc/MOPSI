@@ -89,7 +89,10 @@ def neutral_selection_ratio(attributions, requests_list):
     return nb_neutral, ratio
 
 
-def mean_median_std(attributions, requests, attribute):
+def mean_median_std(attributions, requests, attribute, threshold=None):
+    if threshold:
+        requests = [request for request in requests if request.distance < threshold]
+        attributions = [attribution for attribution in attributions if attribution.request.distance < threshold]
     attribute_getter = operator.attrgetter(attribute)
     overall_attributes = [attribute_getter(request) for request in requests]
     selected_attributes = [attribute_getter(attribution.request) for attribution in attributions]
@@ -106,22 +109,26 @@ def primary_criteria_overview(attributions, requests_list, solution_name, thresh
     distances = [request.distance for request in requests_list]
     ranks = [request.shotgun_rank for request in requests_list]
     scholarships = [['x', 's'][request.scholarship] for request in requests_list]  # requests with scholarship are identified by a square
-    selected_requests = ['b' for _ in range(len(requests_list))]
+    selected_requests = ['tab:blue' for _ in range(len(requests_list))]
     for attribution in attributions:
-        selected_requests[id_to_idx[attribution.request.student_id]] = 'r'  # selected requests are identified in red
+        selected_requests[id_to_idx[attribution.request.student_id]] = 'tab:red'  # selected requests are identified in red
 
     # plot
     plt.figure()
     for (distance, rank, scholarship, selection) in zip(distances, ranks, scholarships, selected_requests):
         plt.scatter(distance, rank, color=selection, marker=scholarship)
-    plt.title("Synthèse des critères primaires des demandes et de leur sélection")
+    plt.plot([params.paris_threshold, params.paris_threshold], [0, len(requests)], 'k--', linewidth=2)
+    plt.plot([params.foreign_threshold, params.foreign_threshold], [0, len(requests)], 'k-.', linewidth=2)
+    # plt.title("Synthèse des critères primaires des demandes et de leur sélection")
     plt.xlabel("Distance des Ponts")
     plt.ylabel("Rang dans le shotgun")
-    blue_dot = mlines.Line2D([], [], color='b', linewidth=0, marker='o', label='Étudiant disqualifié')
-    red_dot = mlines.Line2D([], [], color='r', linewidth=0, marker='o', label='Étudiant sélectionnée')
+    blue_dot = mlines.Line2D([], [], color='tab:blue', linewidth=0, marker='o', label='Étudiant disqualifié')
+    red_dot = mlines.Line2D([], [], color='tab:red', linewidth=0, marker='o', label='Étudiant sélectionné')
     cross = mlines.Line2D([], [], color='k', linewidth=0, marker='x', label='Étudiant non boursier')
     square = mlines.Line2D([], [], color='k', linewidth=0, marker='s', label='Étudiant boursier')
-    plt.legend(handles=[blue_dot, red_dot, cross, square])
+    dashed_line = mlines.Line2D([0, 0], [0, 1], linestyle='--', linewidth=2, color='k', label='Seuil $50 km$')
+    dash_dotted_line = mlines.Line2D([0, 0], [0, 1], linestyle='-.', linewidth=2, color='k', label='Seuil $800 km$')
+    plt.legend(handles=[blue_dot, red_dot, cross, square, dashed_line, dash_dotted_line], loc="upper right")
     plt.plot()
     plt.savefig(f"figures/solutions_analytics/primary-criteria-overview_{solution_name}")
 
@@ -144,7 +151,7 @@ def room_type_preference_satfisfaction(attributions, solution_name):
     for room_type in range(nb_room_types):
         chart_layers.append(plt.bar(x, pref_vs_rec_matrix[room_type], width, bottom=bottom))
         bottom += pref_vs_rec_matrix[room_type]
-    plt.title("Distribution des préférences dans chaque type de chambre")
+    # plt.title("Distribution des préférences dans chaque type de chambre")
     plt.ylabel("Nombre d'étudiants")
     plt.xlabel("Type de chambre reçu")
     plt.xticks(x, room_labels)
@@ -176,12 +183,12 @@ def friendship_satisfaction(attributions):
 
 
 if __name__ == "__main__":
-    instance = "large"
-    # instance = "real"
+    # instance = "large"
+    instance = "real"
 
     print("Loading attributions...")
-    rooms_file, requests_file = params.files[instance]
-    # rooms_file, requests_file = "db/chambre.json", "db/eleves_demande.json"
+    # rooms_file, requests_file = params.files[instance]
+    rooms_file, requests_file = "db/chambre.json", "db/eleves_demande.json"
     attributions = load_attributions(rooms_file, requests_file, instance)
 
     print("Loading requests and rooms [", instance, "] ...")
@@ -194,7 +201,7 @@ if __name__ == "__main__":
     # Primary criteria
     print("number of requests :", len(requests))
     print("total capacity:", sum([room.capacity for room in rooms]))
-    overall_distance_mean, overall_distance_median, overall_distance_std, selected_distance_mean, selected_distance_median, selected_distance_std = mean_median_std(attributions, requests, "distance")
+    overall_distance_mean, overall_distance_median, overall_distance_std, selected_distance_mean, selected_distance_median, selected_distance_std = mean_median_std(attributions, requests, "distance", threshold=3000)
     print("overall distance mean, median and std :", overall_distance_mean, overall_distance_median, overall_distance_std)
     print("selected distance mean, median and std :", selected_distance_mean, selected_distance_median, selected_distance_std)
     _, _, _, shotgun_mean, shotgun_median, _ = mean_median_std(attributions, requests, "shotgun_rank")
@@ -202,13 +209,14 @@ if __name__ == "__main__":
     nb_distant, distant_ratio = distance_selection_ratio(attributions, requests, 800)
     print("number of distant:", nb_distant)
     print("distant (selected_ratio/overall_ratio) :", distant_ratio)
+    distances_box_plot(attributions, requests, instance)
     nb_scholarships, scholarship_ratio = scholarship_selection_ratio(attributions, requests)
     print("number of scholarships:", nb_scholarships)
     print("scholarship (selected_ratio/overall_ratio) :", scholarship_ratio)
     nb_neutrals, neutral_ratio = neutral_selection_ratio(attributions, requests)
     print("number of neutral:", nb_neutrals)
     print("neutral (selected_ratio/overall_ratio) :", neutral_ratio)
-    primary_criteria_overview(attributions, requests, instance, threshold=10000)
+    primary_criteria_overview(attributions, requests, instance, threshold=3000)
 
     # Secondary criteria
     room_type_preference_satfisfaction(attributions, instance)
