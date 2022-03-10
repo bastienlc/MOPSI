@@ -112,7 +112,7 @@ def distances_box_plot(attributions, requests, solution_name, threshold=None):
     boxnames = ["Toutes demandes", "Demandes sélectionnées"]
     plt.xticks([1, 2], boxnames)
     plt.ylabel("Distance")
-    plt.savefig(f"figures/solutions_analytics/distances-boxplot_{solution_name}")
+    plt.savefig(f"figures/solutions_analytics/distances-boxplot_{solution_name}", dpi=400)
 
 
 def shotgun_box_plot(attributions, requests, solution_name):
@@ -123,7 +123,7 @@ def shotgun_box_plot(attributions, requests, solution_name):
     boxnames = ["Toutes demandes", "Demandes sélectionnées"]
     plt.xticks([1, 2], boxnames)
     plt.ylabel("Rang au shotgun")
-    plt.savefig(f"figures/solutions_analytics/shotgun-boxplot_{solution_name}")
+    plt.savefig(f"figures/solutions_analytics/shotgun-boxplot_{solution_name}", dpi=400)
 
 
 def primary_criteria_overview(attributions, requests_list, solution_name, threshold=None):
@@ -156,7 +156,7 @@ def primary_criteria_overview(attributions, requests_list, solution_name, thresh
     dash_dotted_line = mlines.Line2D([0, 0], [0, 1], linestyle='-.', linewidth=2, color='k', label='Seuil $800 km$')
     plt.legend(handles=[blue_dot, red_dot, cross, square, dashed_line, dash_dotted_line])
     plt.plot()
-    plt.savefig(f"figures/solutions_analytics/primary-criteria-overview_{solution_name}")
+    plt.savefig(f"figures/solutions_analytics/primary-criteria-overview_{solution_name}", dpi=400)
 
 
 def room_type_preference_satfisfaction(attributions, solution_name):
@@ -185,7 +185,7 @@ def room_type_preference_satfisfaction(attributions, solution_name):
     plt.legend(chart_layers[-1::-1, 0], room_labels[-1::-1], title="Préférence de chambre", loc="upper right")
 
     plt.plot()
-    plt.savefig(f"figures/solutions_analytics/room-type-preference_{solution_name}")
+    plt.savefig(f"figures/solutions_analytics/room-type-preference_{solution_name}", dpi=400)
 
 
 def friendship_satisfaction(attributions):
@@ -237,12 +237,12 @@ def cost_analysis(attributions, requests_dictionary, solution_name):
     fig, ax = plt.subplots()
     ax.pie(score_primary, labels=labels_primary, normalize=True, textprops={'fontsize': 14}, autopct=absolute_value)
     plt.show()
-    fig.savefig(f"figures/solutions_analytics/score_analysis_primary_{solution_name}")
+    fig.savefig(f"figures/solutions_analytics/score_analysis_primary_{solution_name}", dpi=400)
 
     fig, ax = plt.subplots()
     ax.pie(score_secondary, labels=labels_secondary, normalize=True, textprops={'fontsize': 14})
     plt.show()
-    fig.savefig(f"figures/solutions_analytics/score_analysis_secondary_{solution_name}")
+    fig.savefig(f"figures/solutions_analytics/score_analysis_secondary_{solution_name}", dpi=400)
 
 
 def analysis(instance_size, instance_type):
