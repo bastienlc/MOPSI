@@ -247,7 +247,7 @@ def cost_analysis(attributions, requests_dictionary, solution_name):
 
 if __name__ == "__main__":
     print("===HEURISTIC===")
-    instance_1 = "500"
+    instance_1 = "300"
     print("Loading attributions...")
     rooms_file, requests_file = params.files[instance_1]
     instance_1 += "_heuristic"
@@ -295,9 +295,9 @@ if __name__ == "__main__":
 
     cost_analysis(attributions_heuristic, requests_dictionary, instance_1)
 
-    if False:
+    if True:
         print("===MILP===")
-        instance_2 = "500"
+        instance_2 = "300"
         print("Loading attributions...")
         rooms_file, requests_file = params.files[instance_2]
         instance_2 += "_milp"
@@ -309,23 +309,27 @@ if __name__ == "__main__":
         rooms = json_to_objects_rooms(rooms_file)
 
         print("solution score :", compute_score(attributions_milp, requests_dictionary))
-        print("nombre de chambres non occupées :", sum([room.capacity for room in rooms]) - len(attributions_milp))
+        print("number of unoccupied rooms :", sum([room.capacity for room in rooms]) - len(attributions_milp))
 
         # Primary criteria
         print("number of requests :", len(requests))
         print("total capacity:", sum([room.capacity for room in rooms]))
         overall_distance_mean, overall_distance_median, overall_distance_std, selected_distance_mean, selected_distance_median, selected_distance_std = mean_median_std(
             attributions_milp, requests, "distance", threshold=3000)
+        print("number of simple rooms:", sum([True for room in rooms if room.room_type == 0]))
+        print("number of binom rooms:", sum([True for room in rooms if room.room_type == 1]))
+        print("number of double rooms:", sum([True for room in rooms if room.room_type == 2]))
         print("overall distance mean, median and std :", overall_distance_mean, overall_distance_median,
               overall_distance_std)
         print("selected distance mean, median and std :", selected_distance_mean, selected_distance_median,
               selected_distance_std)
         _, _, _, shotgun_mean, shotgun_median, _ = mean_median_std(attributions_milp, requests, "shotgun_rank")
         print("shotgun mean and median :", shotgun_mean, shotgun_median)
+        shotgun_box_plot(attributions_milp, requests, instance_2)
         nb_distant, distant_ratio = distance_selection_ratio(attributions_milp, requests, 800)
         print("number of distant:", nb_distant)
         print("distant (selected_ratio/overall_ratio) :", distant_ratio)
-        # distances_box_plot(attributions_milp, requests, instance_2)
+        distances_box_plot(attributions_milp, requests, instance_2, threshold=3000)
         nb_scholarships, scholarship_ratio = scholarship_selection_ratio(attributions_milp, requests)
         print("number of scholarships:", nb_scholarships)
         print("scholarship (selected_ratio/overall_ratio) :", scholarship_ratio)
