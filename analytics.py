@@ -101,6 +101,31 @@ def mean_median_std(attributions, requests, attribute, threshold=None):
             int(np.mean(selected_attributes)), int(np.median(selected_attributes)), int(np.std(selected_attributes)))
 
 
+def distances_box_plot(attributions, requests, solution_name, threshold=None):
+    if threshold:
+        requests = [request for request in requests if request.distance < threshold]
+        attributions = [attribution for attribution in attributions if attribution.request.distance < threshold]
+    overall_distances = [request.distance for request in requests]
+    selected_distances = [attribution.request.distance for attribution in attributions]
+    plt.figure()
+    plt.boxplot([overall_distances, selected_distances])
+    boxnames = ["Toutes demandes", "Demandes sélectionnées"]
+    plt.xticks([1, 2], boxnames)
+    plt.ylabel("Distance")
+    plt.savefig(f"figures/solutions_analytics/distances-boxplot_{solution_name}")
+
+
+def shotgun_box_plot(attributions, requests, solution_name):
+    overall_shotgun = [request.shotgun_rank for request in requests]
+    selected_shotgun = [attribution.request.shotgun_rank for attribution in attributions]
+    plt.figure()
+    plt.boxplot([overall_shotgun, selected_shotgun])
+    boxnames = ["Toutes demandes", "Demandes sélectionnées"]
+    plt.xticks([1, 2], boxnames)
+    plt.ylabel("Rang au shotgun")
+    plt.savefig(f"figures/solutions_analytics/shotgun-boxplot_{solution_name}")
+
+
 def primary_criteria_overview(attributions, requests_list, solution_name, threshold=None):
     if threshold:
         requests_list = [request for request in requests_list if request.distance < threshold]
@@ -119,6 +144,7 @@ def primary_criteria_overview(attributions, requests_list, solution_name, thresh
         plt.scatter(distance, rank, color=selection, marker=scholarship)
     plt.plot([params.paris_threshold, params.paris_threshold], [0, len(requests)], 'k--', linewidth=2)
     plt.plot([params.foreign_threshold, params.foreign_threshold], [0, len(requests)], 'k-.', linewidth=2)
+    plt.xscale("log")
     # plt.title("Synthèse des critères primaires des demandes et de leur sélection")
     plt.xlabel("Distance des Ponts")
     plt.ylabel("Rang dans le shotgun")
@@ -128,7 +154,7 @@ def primary_criteria_overview(attributions, requests_list, solution_name, thresh
     square = mlines.Line2D([], [], color='k', linewidth=0, marker='s', label='Étudiant boursier')
     dashed_line = mlines.Line2D([0, 0], [0, 1], linestyle='--', linewidth=2, color='k', label='Seuil $50 km$')
     dash_dotted_line = mlines.Line2D([0, 0], [0, 1], linestyle='-.', linewidth=2, color='k', label='Seuil $800 km$')
-    plt.legend(handles=[blue_dot, red_dot, cross, square, dashed_line, dash_dotted_line], loc="upper right")
+    plt.legend(handles=[blue_dot, red_dot, cross, square, dashed_line, dash_dotted_line])
     plt.plot()
     plt.savefig(f"figures/solutions_analytics/primary-criteria-overview_{solution_name}")
 
@@ -233,20 +259,24 @@ if __name__ == "__main__":
     rooms = json_to_objects_rooms(rooms_file)
 
     print("solution score :", compute_score(attributions_heuristic, requests_dictionary))
-    print("nombre de chambres non occupées :", sum([room.capacity for room in rooms]) - len(attributions_heuristic))
+    print("number of unoccupied rooms :", sum([room.capacity for room in rooms]) - len(attributions_heuristic))
 
     # Primary criteria
     print("number of requests :", len(requests))
     print("total capacity:", sum([room.capacity for room in rooms]))
     overall_distance_mean, overall_distance_median, overall_distance_std, selected_distance_mean, selected_distance_median, selected_distance_std = mean_median_std(attributions_heuristic, requests, "distance", threshold=3000)
+    print("number of simple rooms:", sum([True for room in rooms if room.room_type == 0]))
+    print("number of binom rooms:", sum([True for room in rooms if room.room_type == 1]))
+    print("number of double rooms:", sum([True for room in rooms if room.room_type == 2]))
     print("overall distance mean, median and std :", overall_distance_mean, overall_distance_median, overall_distance_std)
     print("selected distance mean, median and std :", selected_distance_mean, selected_distance_median, selected_distance_std)
     _, _, _, shotgun_mean, shotgun_median, _ = mean_median_std(attributions_heuristic, requests, "shotgun_rank")
     print("shotgun mean and median :", shotgun_mean, shotgun_median)
+    shotgun_box_plot(attributions_heuristic, requests, instance_1)
     nb_distant, distant_ratio = distance_selection_ratio(attributions_heuristic, requests, 800)
     print("number of distant:", nb_distant)
     print("distant (selected_ratio/overall_ratio) :", distant_ratio)
-    #distances_box_plot(attributions_heuristic, requests, instance_1)
+    distances_box_plot(attributions_heuristic, requests, instance_1, threshold=3000)
     nb_scholarships, scholarship_ratio = scholarship_selection_ratio(attributions_heuristic, requests)
     print("number of scholarships:", nb_scholarships)
     print("scholarship (selected_ratio/overall_ratio) :", scholarship_ratio)
