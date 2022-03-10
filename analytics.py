@@ -142,8 +142,8 @@ def primary_criteria_overview(attributions, requests_list, solution_name, thresh
     plt.figure()
     for (distance, rank, scholarship, selection) in zip(distances, ranks, scholarships, selected_requests):
         plt.scatter(distance, rank, color=selection, marker=scholarship)
-    plt.plot([params.paris_threshold, params.paris_threshold], [0, len(requests)], 'k--', linewidth=2)
-    plt.plot([params.foreign_threshold, params.foreign_threshold], [0, len(requests)], 'k-.', linewidth=2)
+    plt.plot([params.paris_threshold, params.paris_threshold], [0, len(requests_list)], 'k--', linewidth=2)
+    plt.plot([params.foreign_threshold, params.foreign_threshold], [0, len(requests_list)], 'k-.', linewidth=2)
     plt.xscale("log")
     # plt.title("Synthèse des critères primaires des demandes et de leur sélection")
     plt.xlabel("Distance des Ponts")
@@ -245,106 +245,56 @@ def cost_analysis(attributions, requests_dictionary, solution_name):
     fig.savefig(f"figures/solutions_analytics/score_analysis_secondary_{solution_name}")
 
 
-if __name__ == "__main__":
-    print("===HEURISTIC===")
-    instance_1 = "300"
-    print("Loading attributions...")
-    rooms_file, requests_file = params.files[instance_1]
-    instance_1 += "_heuristic"
-    attributions_heuristic = load_attributions(rooms_file, requests_file, instance_1)
-
-    print("Loading requests and rooms [", instance_1, "] ...")
+def analysis(instance_size, instance_type):
+    print(f"========================================ANALYSIS {instance_type} {instance_size}========================================")
+    rooms_file, requests_file = params.files[instance_size]
+    instance = instance_size + "_" + instance_type
+    attributions = load_attributions(rooms_file, requests_file, instance)
     requests = json_to_objects_requests(requests_file)
     requests_dictionary = dictionary_from_requests(requests)
     rooms = json_to_objects_rooms(rooms_file)
 
-    print("solution score :", compute_score(attributions_heuristic, requests_dictionary))
-    print("number of unoccupied rooms :", sum([room.capacity for room in rooms]) - len(attributions_heuristic))
+    print("solution score :", compute_score(attributions, requests_dictionary))
+    print("number of unoccupied rooms :", sum([room.capacity for room in rooms]) - len(attributions))
 
     # Primary criteria
     print("number of requests :", len(requests))
     print("total capacity:", sum([room.capacity for room in rooms]))
-    overall_distance_mean, overall_distance_median, overall_distance_std, selected_distance_mean, selected_distance_median, selected_distance_std = mean_median_std(attributions_heuristic, requests, "distance", threshold=3000)
+    overall_distance_mean, overall_distance_median, overall_distance_std, selected_distance_mean, selected_distance_median, selected_distance_std = mean_median_std(
+        attributions, requests, "distance", threshold=3000)
     print("number of simple rooms:", sum([True for room in rooms if room.room_type == 0]))
     print("number of binom rooms:", sum([True for room in rooms if room.room_type == 1]))
     print("number of double rooms:", sum([True for room in rooms if room.room_type == 2]))
-    print("overall distance mean, median and std :", overall_distance_mean, overall_distance_median, overall_distance_std)
-    print("selected distance mean, median and std :", selected_distance_mean, selected_distance_median, selected_distance_std)
-    _, _, _, shotgun_mean, shotgun_median, _ = mean_median_std(attributions_heuristic, requests, "shotgun_rank")
+    print("overall distance mean, median and std :", overall_distance_mean, overall_distance_median,
+          overall_distance_std)
+    print("selected distance mean, median and std :", selected_distance_mean, selected_distance_median,
+          selected_distance_std)
+    _, _, _, shotgun_mean, shotgun_median, _ = mean_median_std(attributions, requests, "shotgun_rank")
     print("shotgun mean and median :", shotgun_mean, shotgun_median)
-    shotgun_box_plot(attributions_heuristic, requests, instance_1)
-    nb_distant, distant_ratio = distance_selection_ratio(attributions_heuristic, requests, 800)
+    shotgun_box_plot(attributions, requests, instance)
+    nb_distant, distant_ratio = distance_selection_ratio(attributions, requests, 800)
     print("number of distant:", nb_distant)
     print("distant (selected_ratio/overall_ratio) :", distant_ratio)
-    distances_box_plot(attributions_heuristic, requests, instance_1, threshold=3000)
-    nb_scholarships, scholarship_ratio = scholarship_selection_ratio(attributions_heuristic, requests)
+    distances_box_plot(attributions, requests, instance, threshold=3000)
+    nb_scholarships, scholarship_ratio = scholarship_selection_ratio(attributions, requests)
     print("number of scholarships:", nb_scholarships)
     print("scholarship (selected_ratio/overall_ratio) :", scholarship_ratio)
-    nb_neutrals, neutral_ratio = neutral_selection_ratio(attributions_heuristic, requests)
+    nb_neutrals, neutral_ratio = neutral_selection_ratio(attributions, requests)
     print("number of neutral:", nb_neutrals)
     print("neutral (selected_ratio/overall_ratio) :", neutral_ratio)
-    primary_criteria_overview(attributions_heuristic, requests, instance_1, threshold=3000)
+    primary_criteria_overview(attributions, requests, instance, threshold=3000)
 
     # Secondary criteria
-    room_type_preference_satfisfaction(attributions_heuristic, instance_1)
-    number_students_asking_mate, number_students_with_mate_selected, number_students_satisfied = friendship_satisfaction(attributions_heuristic)
+    room_type_preference_satfisfaction(attributions, instance)
+    number_students_asking_mate, number_students_with_mate_selected, number_students_satisfied = friendship_satisfaction(
+        attributions)
     print(f"Among those selected, {number_students_asking_mate} asked to be with a specific mate, "
           f"{number_students_satisfied} were with their friend, "
           f"{number_students_asking_mate - number_students_satisfied} were not and "
           f"{number_students_with_mate_selected - number_students_satisfied} were not even though their friend was selected.")
 
-    cost_analysis(attributions_heuristic, requests_dictionary, instance_1)
+    cost_analysis(attributions, requests_dictionary, instance)
 
-    if True:
-        print("===MILP===")
-        instance_2 = "300"
-        print("Loading attributions...")
-        rooms_file, requests_file = params.files[instance_2]
-        instance_2 += "_milp"
-        attributions_milp = load_attributions(rooms_file, requests_file, instance_2)
-
-        print("Loading requests and rooms [", instance_2, "] ...")
-        requests = json_to_objects_requests(requests_file)
-        requests_dictionary = dictionary_from_requests(requests)
-        rooms = json_to_objects_rooms(rooms_file)
-
-        print("solution score :", compute_score(attributions_milp, requests_dictionary))
-        print("number of unoccupied rooms :", sum([room.capacity for room in rooms]) - len(attributions_milp))
-
-        # Primary criteria
-        print("number of requests :", len(requests))
-        print("total capacity:", sum([room.capacity for room in rooms]))
-        overall_distance_mean, overall_distance_median, overall_distance_std, selected_distance_mean, selected_distance_median, selected_distance_std = mean_median_std(
-            attributions_milp, requests, "distance", threshold=3000)
-        print("number of simple rooms:", sum([True for room in rooms if room.room_type == 0]))
-        print("number of binom rooms:", sum([True for room in rooms if room.room_type == 1]))
-        print("number of double rooms:", sum([True for room in rooms if room.room_type == 2]))
-        print("overall distance mean, median and std :", overall_distance_mean, overall_distance_median,
-              overall_distance_std)
-        print("selected distance mean, median and std :", selected_distance_mean, selected_distance_median,
-              selected_distance_std)
-        _, _, _, shotgun_mean, shotgun_median, _ = mean_median_std(attributions_milp, requests, "shotgun_rank")
-        print("shotgun mean and median :", shotgun_mean, shotgun_median)
-        shotgun_box_plot(attributions_milp, requests, instance_2)
-        nb_distant, distant_ratio = distance_selection_ratio(attributions_milp, requests, 800)
-        print("number of distant:", nb_distant)
-        print("distant (selected_ratio/overall_ratio) :", distant_ratio)
-        distances_box_plot(attributions_milp, requests, instance_2, threshold=3000)
-        nb_scholarships, scholarship_ratio = scholarship_selection_ratio(attributions_milp, requests)
-        print("number of scholarships:", nb_scholarships)
-        print("scholarship (selected_ratio/overall_ratio) :", scholarship_ratio)
-        nb_neutrals, neutral_ratio = neutral_selection_ratio(attributions_milp, requests)
-        print("number of neutral:", nb_neutrals)
-        print("neutral (selected_ratio/overall_ratio) :", neutral_ratio)
-        primary_criteria_overview(attributions_milp, requests, instance_2, threshold=3000)
-
-        # Secondary criteria
-        room_type_preference_satfisfaction(attributions_milp, instance_2)
-        number_students_asking_mate, number_students_with_mate_selected, number_students_satisfied = friendship_satisfaction(
-            attributions_milp)
-        print(f"Among those selected, {number_students_asking_mate} asked to be with a specific mate, "
-              f"{number_students_satisfied} were with their friend, "
-              f"{number_students_asking_mate - number_students_satisfied} were not and "
-              f"{number_students_with_mate_selected - number_students_satisfied} were not even though their friend was selected.")
-
-        cost_analysis(attributions_milp, requests_dictionary, instance_2)
+if __name__ == "__main__":
+    analysis("300", "heuristic")
+    analysis("300", "milp")
