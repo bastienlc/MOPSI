@@ -112,7 +112,7 @@ def distances_box_plot(attributions, requests, solution_name, threshold=None):
     boxnames = ["Toutes demandes", "Demandes sélectionnées"]
     plt.xticks([1, 2], boxnames)
     plt.ylabel("Distance")
-    plt.savefig(f"figures/solutions_analytics/distances-boxplot_{solution_name}")
+    plt.savefig(f"figures/solutions_analytics/distances-boxplot_{solution_name}", dpi=400)
 
 
 def shotgun_box_plot(attributions, requests, solution_name):
@@ -123,7 +123,7 @@ def shotgun_box_plot(attributions, requests, solution_name):
     boxnames = ["Toutes demandes", "Demandes sélectionnées"]
     plt.xticks([1, 2], boxnames)
     plt.ylabel("Rang au shotgun")
-    plt.savefig(f"figures/solutions_analytics/shotgun-boxplot_{solution_name}")
+    plt.savefig(f"figures/solutions_analytics/shotgun-boxplot_{solution_name}", dpi=400)
 
 
 def primary_criteria_overview(attributions, requests_list, solution_name, threshold=None):
@@ -142,8 +142,8 @@ def primary_criteria_overview(attributions, requests_list, solution_name, thresh
     plt.figure()
     for (distance, rank, scholarship, selection) in zip(distances, ranks, scholarships, selected_requests):
         plt.scatter(distance, rank, color=selection, marker=scholarship)
-    plt.plot([params.paris_threshold, params.paris_threshold], [0, len(requests)], 'k--', linewidth=2)
-    plt.plot([params.foreign_threshold, params.foreign_threshold], [0, len(requests)], 'k-.', linewidth=2)
+    plt.plot([params.paris_threshold, params.paris_threshold], [0, len(requests_list)], 'k--', linewidth=2)
+    plt.plot([params.foreign_threshold, params.foreign_threshold], [0, len(requests_list)], 'k-.', linewidth=2)
     plt.xscale("log")
     # plt.title("Synthèse des critères primaires des demandes et de leur sélection")
     plt.xlabel("Distance des Ponts")
@@ -156,7 +156,7 @@ def primary_criteria_overview(attributions, requests_list, solution_name, thresh
     dash_dotted_line = mlines.Line2D([0, 0], [0, 1], linestyle='-.', linewidth=2, color='k', label='Seuil $800 km$')
     plt.legend(handles=[blue_dot, red_dot, cross, square, dashed_line, dash_dotted_line])
     plt.plot()
-    plt.savefig(f"figures/solutions_analytics/primary-criteria-overview_{solution_name}")
+    plt.savefig(f"figures/solutions_analytics/primary-criteria-overview_{solution_name}", dpi=400)
 
 
 def room_type_preference_satfisfaction(attributions, solution_name):
@@ -185,7 +185,7 @@ def room_type_preference_satfisfaction(attributions, solution_name):
     plt.legend(chart_layers[-1::-1, 0], room_labels[-1::-1], title="Préférence de chambre", loc="upper right")
 
     plt.plot()
-    plt.savefig(f"figures/solutions_analytics/room-type-preference_{solution_name}")
+    plt.savefig(f"figures/solutions_analytics/room-type-preference_{solution_name}", dpi=400)
 
 
 def friendship_satisfaction(attributions):
@@ -208,31 +208,67 @@ def friendship_satisfaction(attributions):
     return number_students_asking_mate, number_students_with_mate_selected, number_students_satisfied
 
 
-if __name__ == "__main__":
-    # instance = "large"
-    instance = "real"
+def cost_analysis(attributions, requests_dictionary, solution_name):
+    score_primary = [0, 0, 0, 0, 0]
+    score_secondary = [0, 0]
+    for attribution in attributions:
+        score_primary[0] += 1
+        if attribution.request.prefered_room_type == attribution.room.room_type:
+            score_secondary[0] += params.parameters["room_preference_bonus_parameter"]
+        if attribution.mate is not None:
+            mate_request = requests_dictionary[str(attribution.mate)]
+            if attribution.request.has_mate and attribution.request.mate_id == mate_request.student_id:
+                score_secondary[1] += params.parameters["buddy_preference_parameter"] / 2  # every pair is seen twice
+        if attribution.request.scholarship:
+            score_primary[1] += params.parameters["grant_parameter"]
+        if attribution.request.distance > params.paris_threshold:
+            score_primary[2] += params.parameters["distance_parameter"]
+        if attribution.request.distance > params.foreign_threshold:
+            score_primary[3] += params.parameters["foreign_parameter"]
+        score_primary[4] += params.parameters["shotgun_parameter"] * attribution.request.shotgun_rank
 
-    print("Loading attributions...")
-    # rooms_file, requests_file = params.files[instance]
-    rooms_file, requests_file = "db/chambre.json", "db/eleves_demande.json"
+    labels_primary = ['Remplissage des chambres', 'Boursier', 'Distance (50km)', 'Distance (800km)', 'Shotgun']
+    labels_secondary = ['Chambre préférée', 'Demandes à 2']
+
+    def absolute_value(val):
+        a = np.round(val / 100. * sum(score_primary), 0)
+        return a
+
+    fig, ax = plt.subplots()
+    ax.pie(score_primary, labels=labels_primary, normalize=True, textprops={'fontsize': 14}, autopct=absolute_value)
+    plt.show()
+    fig.savefig(f"figures/solutions_analytics/score_analysis_primary_{solution_name}", dpi=400)
+
+    fig, ax = plt.subplots()
+    ax.pie(score_secondary, labels=labels_secondary, normalize=True, textprops={'fontsize': 14})
+    plt.show()
+    fig.savefig(f"figures/solutions_analytics/score_analysis_secondary_{solution_name}", dpi=400)
+
+
+def analysis(instance_size, instance_type):
+    print(f"========================================ANALYSIS {instance_type} {instance_size}========================================")
+    rooms_file, requests_file = params.files[instance_size]
+    instance = instance_size + "_" + instance_type
     attributions = load_attributions(rooms_file, requests_file, instance)
-
-    print("Loading requests and rooms [", instance, "] ...")
     requests = json_to_objects_requests(requests_file)
+    requests_dictionary = dictionary_from_requests(requests)
     rooms = json_to_objects_rooms(rooms_file)
 
-    print("solution score :", compute_score(attributions, dictionary_from_requests(requests)))
+    print("solution score :", compute_score(attributions, requests_dictionary))
     print("number of unoccupied rooms :", sum([room.capacity for room in rooms]) - len(attributions))
 
     # Primary criteria
     print("number of requests :", len(requests))
     print("total capacity:", sum([room.capacity for room in rooms]))
+    overall_distance_mean, overall_distance_median, overall_distance_std, selected_distance_mean, selected_distance_median, selected_distance_std = mean_median_std(
+        attributions, requests, "distance", threshold=3000)
     print("number of simple rooms:", sum([True for room in rooms if room.room_type == 0]))
     print("number of binom rooms:", sum([True for room in rooms if room.room_type == 1]))
     print("number of double rooms:", sum([True for room in rooms if room.room_type == 2]))
-    overall_distance_mean, overall_distance_median, overall_distance_std, selected_distance_mean, selected_distance_median, selected_distance_std = mean_median_std(attributions, requests, "distance", threshold=3000)
-    print("overall distance mean, median and std :", overall_distance_mean, overall_distance_median, overall_distance_std)
-    print("selected distance mean, median and std :", selected_distance_mean, selected_distance_median, selected_distance_std)
+    print("overall distance mean, median and std :", overall_distance_mean, overall_distance_median,
+          overall_distance_std)
+    print("selected distance mean, median and std :", selected_distance_mean, selected_distance_median,
+          selected_distance_std)
     _, _, _, shotgun_mean, shotgun_median, _ = mean_median_std(attributions, requests, "shotgun_rank")
     print("shotgun mean and median :", shotgun_mean, shotgun_median)
     shotgun_box_plot(attributions, requests, instance)
@@ -250,8 +286,15 @@ if __name__ == "__main__":
 
     # Secondary criteria
     room_type_preference_satfisfaction(attributions, instance)
-    number_students_asking_mate, number_students_with_mate_selected, number_students_satisfied = friendship_satisfaction(attributions)
+    number_students_asking_mate, number_students_with_mate_selected, number_students_satisfied = friendship_satisfaction(
+        attributions)
     print(f"Among those selected, {number_students_asking_mate} asked to be with a specific mate, "
           f"{number_students_satisfied} were with their friend, "
           f"{number_students_asking_mate - number_students_satisfied} were not and "
-          f"{number_students_with_mate_selected - number_students_satisfied} were not whereas their friend was selected.")
+          f"{number_students_with_mate_selected - number_students_satisfied} were not even though their friend was selected.")
+
+    cost_analysis(attributions, requests_dictionary, instance)
+
+if __name__ == "__main__":
+    analysis("300", "heuristic")
+    analysis("300", "milp")

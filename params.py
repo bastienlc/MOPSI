@@ -17,8 +17,15 @@ parameters = {
 }
 
 files = {
+    "50": ("instances/chambre_50.json", "instances/eleves_demande_50.json"),
+    "100": ("instances/chambre_100.json", "instances/eleves_demande_100.json"),
+    "200": ("instances/chambre_200.json", "instances/eleves_demande_200.json"),
+    "300": ("instances/chambre_300.json", "instances/eleves_demande_300.json"),
+    "400": ("instances/chambre_400.json", "instances/eleves_demande_400.json"),
+    "500": ("instances/chambre_500.json", "instances/eleves_demande_500.json"),
     "small": ("instances/chambre_small.json", "instances/eleves_demande_small.json"),
     "medium": ("instances/chambre_medium.json", "instances/eleves_demande_100.json"),
+    "intermediate": ("instances/chambre_intermediate.json", "instances/eleves_demande_200.json"),
     "large": ("instances/chambre_large.json", "instances/eleves_demande_500.json"),
     "double_rooms_only": ("simple_cases_instances/double-rooms-only_rooms.json", "simple_cases_instances/double-rooms-only_requests.json"),
     "simple_rooms_only": ("simple_cases_instances/simple-rooms-only_rooms.json", "simple_cases_instances/simple-rooms-only_requests.json")
