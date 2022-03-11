@@ -59,17 +59,38 @@ def get_upper_bound_with_milp(requests_list, rooms_list, max_iter=1):
     return compute_score_no_penalisation(attributions, selected_requests_dictonary)
 
 
+def get_upper_bound_with_milp_fully_relaxed(requests_list, rooms_list, max_iter=1):
+    """
+    Applies the MILP on the best requests ordered by primary score with full relaxation of the constraints.
+    """
+    requests_list.sort(reverse=True, key=lambda request: request.get_absolute_score())
+    total_capacity = sum([room.capacity for room in rooms_list])
+
+    selected_requests_dictonary = dictionary_from_requests(requests_list[:total_capacity])  # requests are progressively added if all the rooms are not filled
+    # process selected requests to remove inconsistent friend requests
+    for request in selected_requests_dictonary.values():
+        if request.has_mate and not str(request.mate_id) in selected_requests_dictonary.keys(): # Not optimal but good enough
+            request.has_mate = False
+            request.mate_id = None
+
+    selected_requests_list = list(selected_requests_dictonary.values())
+    attributions = milp_solve(selected_requests_list, rooms_list, constraints=False)
+
+    return compute_score_no_penalisation(attributions, selected_requests_dictonary)
+
+
 if __name__ == "__main__":
-    instance = "medium"
-    # instance = "real"
+    # instance = "medium"
+    instance = "real"
 
     print("Loading attributions...")
-    rooms_file, requests_file = params.files[instance]
-    # rooms_file, requests_file = "db/chambre.json", "db/eleves_demande.json"
+    # rooms_file, requests_file = params.files[instance]
+    rooms_file, requests_file = "db/chambre.json", "db/eleves_demande.json"
     attributions = load_attributions(rooms_file, requests_file, instance)
 
     print("Loading requests and rooms [", instance, "] ...")
     requests = json_to_objects_requests(requests_file)
     rooms = json_to_objects_rooms(rooms_file)
 
-    print("upper bound :", get_upper_bound_with_milp(requests, rooms))
+    # print("upper bound :", get_upper_bound_with_milp(requests, rooms))
+    print("upper bound :", get_upper_bound_with_milp_fully_relaxed(requests, rooms))

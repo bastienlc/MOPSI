@@ -9,7 +9,7 @@ parameters = {
     "room_preference_bonus_parameter": 0.000001,  # Bp
     "room_preference_malus_parameter": 100,  # Pp
     "gender_mix_parameter": 100,  # Pg
-    "buddy_preference_parameter": 0.000001,  # Bb
+    "buddy_preference_parameter": 0.001,  # Bb
     "grant_parameter": 0.2,  # Bs
     "distance_parameter": 0.3,  # Bd
     "foreign_parameter": 1,  # Bf
