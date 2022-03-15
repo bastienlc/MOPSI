@@ -80,17 +80,17 @@ def get_upper_bound_with_milp_fully_relaxed(requests_list, rooms_list, max_iter=
 
 
 if __name__ == "__main__":
-    # instance = "medium"
     instance = "real"
 
-    print("Loading attributions...")
-    # rooms_file, requests_file = params.files[instance]
-    rooms_file, requests_file = "db/chambre.json", "db/eleves_demande.json"
-    attributions = load_attributions(rooms_file, requests_file, instance)
-
     print("Loading requests and rooms [", instance, "] ...")
-    requests = json_to_objects_requests(requests_file)
-    rooms = json_to_objects_rooms(rooms_file)
+    if instance == "real":
+        rooms_file, requests_file = "db/chambre.json", "db/eleves_demande.json"
+        requests = json_to_objects_requests("db/eleves_demande.json")
+        rooms = json_to_objects_rooms("db/chambre.json")
+    else:
+        rooms_file, requests_file = params.files[instance]
+        requests = json_to_objects_requests(requests_file)
+        rooms = json_to_objects_rooms(rooms_file)
 
     # print("upper bound :", get_upper_bound_with_milp(requests, rooms))
     print("upper bound :", get_upper_bound_with_milp_fully_relaxed(requests, rooms))

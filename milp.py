@@ -219,12 +219,17 @@ def milp_solve(requests, rooms, parameters=params.parameters, verbose=True, cons
 
 
 if __name__ == "__main__":
-    instance = "medium"
-    rooms_file, requests_file = files[instance]
+    # instance = "real"
+    instance = "small"
 
     print("Loading requests and rooms [", instance, "] ...")
-    requests = json_to_objects_requests(requests_file)
-    rooms = json_to_objects_rooms(rooms_file)
+    if instance == "real":
+        requests = json_to_objects_requests("db/eleves_demande.json")
+        rooms = json_to_objects_rooms("db/chambre.json")
+    else:
+        rooms_file, requests_file = files[instance]
+        requests = json_to_objects_requests(requests_file)
+        rooms = json_to_objects_rooms(rooms_file)
     print("Requests and rooms loaded.")
     print("Launching MILP solver :")
     attributions = milp_solve(requests, rooms, params.parameters)
@@ -233,5 +238,7 @@ if __name__ == "__main__":
     with open(f'solutions/score.json', 'w') as f:
         json.dump(score_json, f)
     print("Writing solution files...")
-    write_solutions(attributions, requests, rooms, "test")
+    solution_name = f"{instance}_milp"
+    write_solutions(attributions, requests, rooms, solution_name)
+    save_attributions(attributions, solution_name)
     print("Done.")

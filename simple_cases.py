@@ -1,4 +1,7 @@
 from objects import Request, Room, Attribution
+import time
+from local_solver import compute_score_no_penalisation
+from milp import milp_solve
 from data_conversion import *
 import sys
 import itertools
@@ -388,8 +391,31 @@ def many_double_one_simple_rooms(requests, rooms):
     return attributions
 
 
+def test_simple_case_and_compare_with_milp(simple_case, algorithm, test_case):
+    """
+    Tests a simple case algorithm on a given test case and compares the result with the one given by the MILP.
+    :param simple_case: string naming the simple case to be tested
+    :param algorithm: function implementing the algorithm to be tested
+    :param test_case: number of the test case to be tested on
+    :return: Nothing. Prints the gap between the values of the objective returned by the algorithm and the MILP.
+    Prints the execution time difference between the algorithm and the MILP. Also, writes the solution in csv files.
+    """
+    requests = json_to_objects_requests(f"simple_cases_instances/{simple_case}/{simple_case}_test_{test_case}_requests.json")
+    requests_dictionary = {str(request.student_id): request for request in requests}
+    rooms = json_to_objects_rooms(f"simple_cases_instances/{simple_case}/{simple_case}_test_{test_case}_rooms.json")
+    t0_algo = time.time()
+    algo_attributions = algorithm(requests, rooms)
+    time_algo = time.time() - t0_algo
+    algo_score = compute_score_no_penalisation(algo_attributions, requests_dictionary)
+    write_solutions(algo_attributions, requests, rooms, simple_case)
+    t0_milp = time.time()
+    milp_attributions = milp_solve(requests, rooms)
+    time_milp = time.time() - t0_milp
+    milp_score = compute_score_no_penalisation(milp_attributions, requests_dictionary)
+    write_solutions(milp_attributions, requests, rooms, "test")
+    print("objective gap :", algo_score - milp_score)
+    print("time gap :", time_algo - time_milp)
+
+
 if __name__ == "__main__":
-    requests = json_to_objects_requests("simple_cases_instances/double_rooms/double-rooms-only_test_1_requests.json")
-    rooms = json_to_objects_rooms("simple_cases_instances/double_rooms/double-rooms-only_test_1_rooms.json")
-    attributions = double_rooms_only_exact(requests, rooms)
-    write_solutions(attributions, requests, rooms, "double-rooms-only")
+    test_simple_case_and_compare_with_milp("simple-rooms-only", simple_rooms_only, 0)

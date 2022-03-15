@@ -9,13 +9,15 @@ from params import parameters, files
 print("========================================= PREPARING HEURISTIC ========================================")
 
 instance = "real"
-# rooms_file, requests_file = files[instance]
 
 print("Loading requests and rooms [", instance, "] ...")
-# requests = json_to_objects_requests(requests_file)
-# rooms = json_to_objects_rooms(rooms_file)
-requests = json_to_objects_requests("db/eleves_demande.json")
-rooms = json_to_objects_rooms("db/chambre.json")
+if instance == "real":
+    requests = json_to_objects_requests("db/eleves_demande.json")
+    rooms = json_to_objects_rooms("db/chambre.json")
+else:
+    rooms_file, requests_file = files[instance]
+    requests = json_to_objects_requests(requests_file)
+    rooms = json_to_objects_rooms(rooms_file)
 requests.sort(key=operator.methodcaller('get_absolute_score', parameters), reverse=True)
 random.shuffle(rooms)
 requests_dictionary = dictionary_from_requests(requests)
@@ -97,6 +99,7 @@ for attribution in attributions:
     print(attribution)
 print("Final score : ", compute_score(attributions, requests_dictionary))
 print("========================================= WRITING SOLUTION =========================================")
-write_solutions(attributions, requests, rooms, instance)
-save_attributions(attributions, instance)
+solution_name = f"{instance}_heuristic"
+write_solutions(attributions, requests, rooms, solution_name)
+save_attributions(attributions, solution_name)
 print("=============================================== DONE ===============================================")
