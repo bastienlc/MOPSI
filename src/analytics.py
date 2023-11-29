@@ -135,9 +135,7 @@ def distances_box_plot(attributions, requests, solution_name, threshold=None):
     boxnames = ["Toutes demandes", "Demandes sélectionnées"]
     plt.xticks([1, 2], boxnames)
     plt.ylabel("Distance")
-    plt.savefig(
-        f"figures/solutions_analytics/distances-boxplot_{solution_name}", dpi=400
-    )
+    plt.savefig(f"figures/distances-boxplot_{solution_name}", dpi=400)
 
 
 def shotgun_box_plot(attributions, requests, solution_name):
@@ -150,7 +148,7 @@ def shotgun_box_plot(attributions, requests, solution_name):
     boxnames = ["Toutes demandes", "Demandes sélectionnées"]
     plt.xticks([1, 2], boxnames)
     plt.ylabel("Rang au shotgun")
-    plt.savefig(f"figures/solutions_analytics/shotgun-boxplot_{solution_name}", dpi=400)
+    plt.savefig(f"figures/shotgun-boxplot_{solution_name}", dpi=400)
 
 
 def primary_criteria_overview(
@@ -222,7 +220,7 @@ def primary_criteria_overview(
     )
     plt.plot()
     plt.savefig(
-        f"figures/solutions_analytics/primary-criteria-overview_{solution_name}",
+        f"figures/primary-criteria-overview_{solution_name}",
         dpi=400,
     )
 
@@ -262,9 +260,7 @@ def room_type_preference_satfisfaction(attributions, solution_name):
     )
 
     plt.plot()
-    plt.savefig(
-        f"figures/solutions_analytics/room-type-preference_{solution_name}", dpi=400
-    )
+    plt.savefig(f"figures/room-type-preference_{solution_name}", dpi=400)
 
 
 def friendship_satisfaction(attributions):
@@ -342,9 +338,7 @@ def cost_analysis(attributions, requests_dictionary, solution_name):
         autopct=absolute_value,
     )
     plt.show()
-    fig.savefig(
-        f"figures/solutions_analytics/score_analysis_primary_{solution_name}", dpi=400
-    )
+    fig.savefig(f"figures/score_analysis_primary_{solution_name}", dpi=400)
 
     fig, ax = plt.subplots()
     ax.pie(
@@ -354,9 +348,7 @@ def cost_analysis(attributions, requests_dictionary, solution_name):
         textprops={"fontsize": 14},
     )
     plt.show()
-    fig.savefig(
-        f"figures/solutions_analytics/score_analysis_secondary_{solution_name}", dpi=400
-    )
+    fig.savefig(f"figures/score_analysis_secondary_{solution_name}", dpi=400)
 
 
 def analysis(instance_size, solution_type):
