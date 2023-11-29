@@ -1,12 +1,21 @@
-from data_conversion import json_to_objects_rooms, json_to_objects_requests, write_solutions, dictionary_from_requests, dictionary_from_rooms, save_attributions
 import operator
 import random
+
+from data_conversion import (
+    dictionary_from_requests,
+    dictionary_from_rooms,
+    json_to_objects_requests,
+    json_to_objects_rooms,
+    save_attributions,
+    write_solutions,
+)
+from local_solver import compute_score, local_solver
 from milp import milp_solve
-from local_solver import local_solver, compute_score
+from params import files, parameters
 
-from params import parameters, files
-
-print("========================================= PREPARING HEURISTIC ========================================")
+print(
+    "========================================= PREPARING HEURISTIC ========================================"
+)
 
 instance = "real"
 
@@ -18,7 +27,7 @@ else:
     rooms_file, requests_file = files[instance]
     requests = json_to_objects_requests(requests_file)
     rooms = json_to_objects_rooms(rooms_file)
-requests.sort(key=operator.methodcaller('get_absolute_score', parameters), reverse=True)
+requests.sort(key=operator.methodcaller("get_absolute_score", parameters), reverse=True)
 random.shuffle(rooms)
 requests_dictionary = dictionary_from_requests(requests)
 rooms_dictionary = dictionary_from_rooms(rooms)
@@ -33,7 +42,6 @@ if instance == "small" or instance == "medium":
     n = 10000
 else:
     n = 2000
-
 
 
 requests_groups = []
@@ -68,38 +76,56 @@ while room_index < len(rooms) and group_index < number_of_groups:
         capacity = 0
         group_index += 1
 
-print("=========================================== SOLVING GROUPS ===========================================")
+print(
+    "=========================================== SOLVING GROUPS ==========================================="
+)
 
 attributions = []
 for k in range(number_of_groups):
-    print("-------- SOLVING GROUP ", k+1, "--------")
+    print("-------- SOLVING GROUP ", k + 1, "--------")
     attributions += milp_solve(requests_groups[k], room_groups[k], parameters)
 
-print("=========================================== GROUPS SOLVED ===========================================")
-print("====================================== LAUNCHING LOCAL SOLVER =======================================")
+print(
+    "=========================================== GROUPS SOLVED ==========================================="
+)
+print(
+    "====================================== LAUNCHING LOCAL SOLVER ======================================="
+)
 
 print("Score before local solving : ", compute_score(attributions, requests_dictionary))
 
 attributions.sort(key=lambda attribution: attribution.request.student_id)
 attributions = local_solver(attributions, requests_dictionary, rooms_dictionary, n)
 
-print("======================================== LOCAL SOLVER ENDED ========================================")
+print(
+    "======================================== LOCAL SOLVER ENDED ========================================"
+)
 
-print("================================= FINE-TUNING ATTRIBUTION WITH MILP ================================")
+print(
+    "================================= FINE-TUNING ATTRIBUTION WITH MILP ================================"
+)
 
 selected_requests = [attribution.request for attribution in attributions]
 for room in rooms:
     room.empty()
 attributions = milp_solve(selected_requests, rooms)
 
-print("========================================= FINE-TUNING ENDED ========================================")
+print(
+    "========================================= FINE-TUNING ENDED ========================================"
+)
 
-print("============================================= SOLUTION =============================================")
+print(
+    "============================================= SOLUTION ============================================="
+)
 for attribution in attributions:
     print(attribution)
 print("Final score : ", compute_score(attributions, requests_dictionary))
-print("========================================= WRITING SOLUTION =========================================")
+print(
+    "========================================= WRITING SOLUTION ========================================="
+)
 solution_name = f"{instance}_heuristic"
 write_solutions(attributions, requests, rooms, solution_name)
 save_attributions(attributions, solution_name)
-print("=============================================== DONE ===============================================")
+print(
+    "=============================================== DONE ==============================================="
+)

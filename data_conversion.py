@@ -1,7 +1,9 @@
-import json
-import numpy as np
 import csv
-from objects import Request, Room, Attribution
+import json
+
+import numpy as np
+
+from objects import Attribution, Request, Room
 
 
 def dictionary_from_requests(requests):
@@ -33,7 +35,10 @@ def json_to_objects_requests(requests_file):
     nb_requests = len(requests_raw)
 
     # Work out shotgun ranks
-    demand_times = [(demand_id, int(requests_raw[demand_id]["demand_time"])) for demand_id in range(nb_requests)]
+    demand_times = [
+        (demand_id, int(requests_raw[demand_id]["demand_time"]))
+        for demand_id in range(nb_requests)
+    ]
     demand_times.sort(key=lambda time: time[1])
     shotgun_ranks = [0 for _ in range(nb_requests)]
     for rank in range(nb_requests):
@@ -42,7 +47,7 @@ def json_to_objects_requests(requests_file):
 
     gender_convention_conversion = [1, -1, 0]
 
-    for (request_i, request) in enumerate(requests_raw):
+    for request_i, request in enumerate(requests_raw):
         student_id = int(request["id_demande"])
         gender = gender_convention_conversion[int(request["gender"]) - 1]
         scholarship = bool(int(request["boursier"]))
@@ -58,8 +63,8 @@ def json_to_objects_requests(requests_file):
             for other_resquest in requests_raw:
                 if other_resquest["mail"] == mate_email:
                     consistent_mate_request = (
-                            bool(int(other_resquest["mate"]))
-                            and other_resquest["mate_email"] == request["mail"]
+                        bool(int(other_resquest["mate"]))
+                        and other_resquest["mate_email"] == request["mail"]
                     )
                     mate_id = int(other_resquest["id_demande"])
                     break
@@ -67,8 +72,17 @@ def json_to_objects_requests(requests_file):
             if not consistent_mate_request:
                 mate_id = None
 
-        request_object = Request(student_id, gender, scholarship, distance, prefered_room_type, accept_other_type,
-                                 has_mate, mate_id, shotgun_rank)
+        request_object = Request(
+            student_id,
+            gender,
+            scholarship,
+            distance,
+            prefered_room_type,
+            accept_other_type,
+            has_mate,
+            mate_id,
+            shotgun_rank,
+        )
         requests_list.append(request_object)
 
     return requests_list
@@ -83,7 +97,9 @@ def json_to_objects_rooms(rooms_file):
     """
     with open(rooms_file) as file:
         rooms_raw = json.load(file)[2]["data"]
-    rooms_list = [Room(int(room["numero"]), int(room["type"]) - 1) for room in rooms_raw]
+    rooms_list = [
+        Room(int(room["numero"]), int(room["type"]) - 1) for room in rooms_raw
+    ]
     return rooms_list
 
 
@@ -98,7 +114,9 @@ def write_attribution_matrix(attributions, requests, solution_name):
     nb_requests = len(requests)
     requests.sort(key=lambda request: request.student_id)
     id_to_idx = {requests[k].student_id: k for k in range(nb_requests)}
-    attribution_matrix = np.array([[None for _ in range(nb_requests)] for _ in range(nb_requests)])
+    attribution_matrix = np.array(
+        [[None for _ in range(nb_requests)] for _ in range(nb_requests)]
+    )
     for attribution in attributions:
         request_idx = id_to_idx[attribution.request.student_id]
         room_id = attribution.room.room_id
@@ -108,10 +126,14 @@ def write_attribution_matrix(attributions, requests, solution_name):
             attribution_matrix[request_idx][mate_idx] = room_id
         else:
             attribution_matrix[request_idx][request_idx] = room_id
-    with open(f'solutions/sol_{solution_name}_matrix.csv', 'w', newline='') as csvfile:
-        solution_writer = csv.writer(csvfile, delimiter=';')
-        solution_writer.writerow(["La cellule (i,j) indique la chambre logeant le(s) eleve(s) d'id i et j."])
-        solution_writer.writerow(["id eleve"] + [request.student_id for request in requests])
+    with open(f"solutions/sol_{solution_name}_matrix.csv", "w", newline="") as csvfile:
+        solution_writer = csv.writer(csvfile, delimiter=";")
+        solution_writer.writerow(
+            ["La cellule (i,j) indique la chambre logeant le(s) eleve(s) d'id i et j."]
+        )
+        solution_writer.writerow(
+            ["id eleve"] + [request.student_id for request in requests]
+        )
         for row_idx in range(nb_requests):
             row = [requests[row_idx].student_id]
             for column_idx in range(nb_requests):
@@ -133,11 +155,27 @@ def write_attributions_requests_wise(attributions, requests, solution_name):
     """
     attributions.sort(key=lambda attribution: attribution.request.student_id)
     satisfied_requests = {request.student_id: False for request in requests}
-    with open(f'solutions/sol_{solution_name}_request-wise.csv', 'w', newline='') as csvfile:
-        solution_writer = csv.writer(csvfile, delimiter=';')
+    with open(
+        f"solutions/sol_{solution_name}_request-wise.csv", "w", newline=""
+    ) as csvfile:
+        solution_writer = csv.writer(csvfile, delimiter=";")
         solution_writer.writerow(
-            ["id eleve", "genre", "boursier", "distance", "preference de chambre", "preference souple", "shotgun",
-             "colocataire souhaite", "", "id chambre", "type chambre", "", "colocataire"])
+            [
+                "id eleve",
+                "genre",
+                "boursier",
+                "distance",
+                "preference de chambre",
+                "preference souple",
+                "shotgun",
+                "colocataire souhaite",
+                "",
+                "id chambre",
+                "type chambre",
+                "",
+                "colocataire",
+            ]
+        )
         for attribution in attributions:
             request = attribution.request
             room = attribution.room
@@ -171,7 +209,11 @@ def write_attributions_requests_wise(attributions, requests, solution_name):
             solution_writer.writerow(row)
             satisfied_requests[request.student_id] = True
 
-        solution_writer.writerow(["=========================================================================================================================================================="])
+        solution_writer.writerow(
+            [
+                "=========================================================================================================================================================="
+            ]
+        )
         solution_writer.writerow(["Demandes non satisfaites :"])
         for request in requests:
             if not satisfied_requests[request.student_id]:
@@ -207,9 +249,13 @@ def write_attributions_rooms_wise(rooms, solution_name):
     :return: Nothing. Writes a csv file containing the list of rooms with their students.
     """
     rooms.sort(key=lambda room: room.room_id)
-    with open(f'solutions/sol_{solution_name}_rooms-wise.csv', 'w', newline='') as csvfile:
-        solution_writer = csv.writer(csvfile, delimiter=';')
-        solution_writer.writerow(["id chambre", "type chambre", "id eleve 1", "id eleve 2"])
+    with open(
+        f"solutions/sol_{solution_name}_rooms-wise.csv", "w", newline=""
+    ) as csvfile:
+        solution_writer = csv.writer(csvfile, delimiter=";")
+        solution_writer.writerow(
+            ["id chambre", "type chambre", "id eleve 1", "id eleve 2"]
+        )
         for room in rooms:
             row = [room.room_id, room.what_room_type()] + room.students
             solution_writer.writerow(row)
@@ -225,12 +271,12 @@ def save_attributions(attributions, solution_name):
     """
     Stores the given attributions as a list of dictionaries and saves it in a json file.
     """
-    with open(f'solutions/attributions/att_{solution_name}.json', 'w') as jsonfile:
+    with open(f"solutions/attributions/att_{solution_name}.json", "w") as jsonfile:
         attributions_as_dict = [
             {
                 "request": attribution.request.student_id,
                 "room": attribution.room.room_id,
-                "mate": attribution.mate
+                "mate": attribution.mate,
             }
             for attribution in attributions
         ]
@@ -248,7 +294,7 @@ def load_attributions(rooms_file, requests_file, solution_name):
     requests_dict = dictionary_from_requests(json_to_objects_requests(requests_file))
     rooms_dict = dictionary_from_rooms(json_to_objects_rooms(rooms_file))
     attributions = []
-    with open(f'solutions/attributions/att_{solution_name}.json', 'r') as jsonfile:
+    with open(f"solutions/attributions/att_{solution_name}.json", "r") as jsonfile:
         attributions_as_dict = json.load(jsonfile)
         for attribution_as_dict in attributions_as_dict:
             request = requests_dict[str(attribution_as_dict["request"])]
@@ -256,7 +302,3 @@ def load_attributions(rooms_file, requests_file, solution_name):
             mate_id = attribution_as_dict["mate"]
             attributions.append(Attribution(request, room, mate_id))
     return attributions
-
-
-if __name__ == "__main__":
-    print("Done.")

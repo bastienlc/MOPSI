@@ -1,19 +1,17 @@
-import gurobipy as gp
-from data_conversion import *
-from objects import Attribution
-import params
-from termcolor import colored
-from params import files
-from local_solver import compute_score
 from datetime import datetime
+
+import gurobipy as gp
+from termcolor import colored
+
+import params
+from data_conversion import *
+from local_solver import compute_score
+from objects import Attribution
+from params import files
 
 
 def get_z_mat(requests_range, rooms_range, m):
-    z = [
-        [
-            [0 for k in rooms_range]
-            for j in requests_range]
-        for i in requests_range]
+    z = [[[0 for k in rooms_range] for j in requests_range] for i in requests_range]
 
     has_roommate = [False for i in requests_range]
 
@@ -71,7 +69,9 @@ def print_pairings(requests_range, rooms_range, m, g):
                 print("   ", end="")
 
 
-def milp_solve(requests, rooms, parameters=params.parameters, verbose=True, constraints=True):
+def milp_solve(
+    requests, rooms, parameters=params.parameters, verbose=True, constraints=True
+):
     """
     Solves the MILP version of the allocation problem.
     :param requests: list of the requests of the student, in the shape:
@@ -104,11 +104,19 @@ def milp_solve(requests, rooms, parameters=params.parameters, verbose=True, cons
 
     # Import data and make notations match the overleaf
     c = [room.room_type for room in rooms]
-    p = [[int(request.prefered_room_type == k) for k in range(nb_room_types)] for request in requests]
+    p = [
+        [int(request.prefered_room_type == k) for k in range(nb_room_types)]
+        for request in requests
+    ]
     q = [int(not request.accept_other_type) for request in requests]
     g = [request.gender for request in requests]
-    b = [[int(request.has_mate and request.mate_id == request2.student_id) for request2 in requests] for request in
-         requests]
+    b = [
+        [
+            int(request.has_mate and request.mate_id == request2.student_id)
+            for request2 in requests
+        ]
+        for request in requests
+    ]
     s = [request.scholarship for request in requests]
     d = [int(request.distance > params.paris_threshold) for request in requests]
     f = [request.distance > params.foreign_threshold for request in requests]
@@ -119,13 +127,24 @@ def milp_solve(requests, rooms, parameters=params.parameters, verbose=True, cons
 
     # Create variables
     x = m.addVars(nb_requests, nb_rooms, vtype="B", name="x")
-    z_indices = [(i_1, i_2, j) for i_1 in requests_range for i_2 in range(i_1 + 1, nb_requests) for j in rooms_range]
+    z_indices = [
+        (i_1, i_2, j)
+        for i_1 in requests_range
+        for i_2 in range(i_1 + 1, nb_requests)
+        for j in rooms_range
+    ]
     z = m.addVars(z_indices, vtype="B", name="z")
 
     # Set objective
     coeff_on_x = {
-        (i, j): (1 + distance_parameter * d[i] + foreign_parameter * f[i] + grant_parameter * s[i] - shotgun_parameter
-                 * r[i] + room_preference_bonus_parameter * p[i][c[j]])
+        (i, j): (
+            1
+            + distance_parameter * d[i]
+            + foreign_parameter * f[i]
+            + grant_parameter * s[i]
+            - shotgun_parameter * r[i]
+            + room_preference_bonus_parameter * p[i][c[j]]
+        )
         for i in requests_range
         for j in rooms_range
     }
@@ -142,26 +161,33 @@ def milp_solve(requests, rooms, parameters=params.parameters, verbose=True, cons
     m.setObjective(sum_on_x + sum_on_z, gp.GRB.MAXIMIZE)
 
     # Add constraints
-    m.addConstrs(x.sum(i, '*') <= 1 for i in requests_range)
-    m.addConstrs(x.sum('*', j) <= min(2, c[j] + 1) for j in rooms_range)
+    m.addConstrs(x.sum(i, "*") <= 1 for i in requests_range)
+    m.addConstrs(x.sum("*", j) <= min(2, c[j] + 1) for j in rooms_range)
 
     m.addConstrs(
         z[i_1, i_2, j] <= x[i_1, j]
-        for i_1 in requests_range for i_2 in range(i_1 + 1, nb_requests) for j in rooms_range
+        for i_1 in requests_range
+        for i_2 in range(i_1 + 1, nb_requests)
+        for j in rooms_range
     )
     m.addConstrs(
         z[i_1, i_2, j] <= x[i_2, j]
-        for i_1 in requests_range for i_2 in range(i_1 + 1, nb_requests) for j in rooms_range
+        for i_1 in requests_range
+        for i_2 in range(i_1 + 1, nb_requests)
+        for j in rooms_range
     )
     m.addConstrs(
         z[i_1, i_2, j] >= x[i_1, j] + x[i_2, j] - 1
-        for i_1 in requests_range for i_2 in range(i_1 + 1, nb_requests) for j in rooms_range
+        for i_1 in requests_range
+        for i_2 in range(i_1 + 1, nb_requests)
+        for j in rooms_range
     )
 
     if constraints:
         coeff_on_z_constraints = [
             {
-                (i_1, i_2, j): abs(g[i_1] * g[i_2] * (g[i_1]-g[i_2])) * (1 - b[i_1][i_2])
+                (i_1, i_2, j): abs(g[i_1] * g[i_2] * (g[i_1] - g[i_2]))
+                * (1 - b[i_1][i_2])
                 for i_1 in requests_range
                 for i_2 in range(i_1 + 1, nb_requests)
             }
@@ -171,7 +197,7 @@ def milp_solve(requests, rooms, parameters=params.parameters, verbose=True, cons
             z.prod(coeff_on_z_constraints[j]) == 0 for j in rooms_range if c[j] >= 1
         )
         m.addConstrs(
-            x[i, j] * (1-p[i][c[j]]) * q[i] == 0
+            x[i, j] * (1 - p[i][c[j]]) * q[i] == 0
             for i in requests_range
             for j in rooms_range
         )
@@ -219,7 +245,6 @@ def milp_solve(requests, rooms, parameters=params.parameters, verbose=True, cons
 
 
 if __name__ == "__main__":
-    # instance = "real"
     instance = "small"
 
     print("Loading requests and rooms [", instance, "] ...")
@@ -234,8 +259,8 @@ if __name__ == "__main__":
     print("Launching MILP solver :")
     attributions = milp_solve(requests, rooms, params.parameters)
     score = compute_score(attributions, dictionary_from_requests(requests))
-    score_json = {"score": score, "date": str(datetime.now()).replace(' ', '-')}
-    with open(f'solutions/score.json', 'w') as f:
+    score_json = {"score": score, "date": str(datetime.now()).replace(" ", "-")}
+    with open(f"solutions/score.json", "w") as f:
         json.dump(score_json, f)
     print("Writing solution files...")
     solution_name = f"{instance}_milp"

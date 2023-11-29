@@ -2,7 +2,18 @@ import params
 
 
 class Request:
-    def __init__(self, student_id, gender, scholarship, distance, prefered_room_type, accept_other_type, has_mate, mate_id, shotgun_rank):
+    def __init__(
+        self,
+        student_id,
+        gender,
+        scholarship,
+        distance,
+        prefered_room_type,
+        accept_other_type,
+        has_mate,
+        mate_id,
+        shotgun_rank,
+    ):
         self.student_id = student_id
         self.gender = gender
         self.scholarship = scholarship
@@ -18,23 +29,36 @@ class Request:
         self.shotgun_rank = shotgun_rank
 
     def __str__(self):
-        return "\nstudent_id: " + str(self.student_id)\
-               + "\ngender: " + str(self.gender)\
-               + "\nscholarship: " + str(self.scholarship)\
-               + "\ndistance: " + str(self.distance)\
-               + "\nprefered_room_type: " + str(self.prefered_room_type)\
-               + "\naccept_other_type: " + str(self.accept_other_type)\
-               + "\nhas_mate: " + str(self.has_mate)\
-               + "\nmate_id: " + str(self.mate_id)\
-               + "\nshotgun_rank: " + str(self.shotgun_rank)
+        return (
+            "\nstudent_id: "
+            + str(self.student_id)
+            + "\ngender: "
+            + str(self.gender)
+            + "\nscholarship: "
+            + str(self.scholarship)
+            + "\ndistance: "
+            + str(self.distance)
+            + "\nprefered_room_type: "
+            + str(self.prefered_room_type)
+            + "\naccept_other_type: "
+            + str(self.accept_other_type)
+            + "\nhas_mate: "
+            + str(self.has_mate)
+            + "\nmate_id: "
+            + str(self.mate_id)
+            + "\nshotgun_rank: "
+            + str(self.shotgun_rank)
+        )
 
     def get_absolute_score(self, parameters=params.parameters):
         return (
-                1
-                + parameters["grant_parameter"] * self.scholarship
-                + parameters["distance_parameter"] * (self.distance > params.paris_threshold)
-                + parameters["foreign_parameter"] * (self.distance > params.foreign_threshold)
-                - parameters["shotgun_parameter"] * self.shotgun_rank
+            1
+            + parameters["grant_parameter"] * self.scholarship
+            + parameters["distance_parameter"]
+            * (self.distance > params.paris_threshold)
+            + parameters["foreign_parameter"]
+            * (self.distance > params.foreign_threshold)
+            - parameters["shotgun_parameter"] * self.shotgun_rank
         )
 
 
@@ -68,10 +92,16 @@ class Room:
         return students
 
     def __str__(self):
-        return "\nroom_type: " + str(self.room_type)\
-               + "\nroom_id: " + str(self.room_id)\
-               + "\ncapacity: " + str(self.capacity)\
-               + "\nstudents: " + str(self.students)
+        return (
+            "\nroom_type: "
+            + str(self.room_type)
+            + "\nroom_id: "
+            + str(self.room_id)
+            + "\ncapacity: "
+            + str(self.capacity)
+            + "\nstudents: "
+            + str(self.students)
+        )
 
 
 class Attribution:
@@ -85,8 +115,23 @@ class Attribution:
 
     def __str__(self):
         if self.mate:
-            return ("Student " + str(self.request.student_id) +
-                    " -- " + "Room " + str(self.room.room_id) +
-                    " -- " + "With " + str(self.mate))
+            return (
+                "Student "
+                + str(self.request.student_id)
+                + " -- "
+                + "Room "
+                + str(self.room.room_id)
+                + " -- "
+                + "With "
+                + str(self.mate)
+            )
         else:
-            return "Student " + str(self.request.student_id) + " -- " + "Room " + str(self.room.room_id) + " -- "  + "Alone"
+            return (
+                "Student "
+                + str(self.request.student_id)
+                + " -- "
+                + "Room "
+                + str(self.room.room_id)
+                + " -- "
+                + "Alone"
+            )
